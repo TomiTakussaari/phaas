@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.codec.Base64;
+import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -35,8 +38,12 @@ public abstract class IT {
 
     @Before
     public void initialize() {
-        apiConsumersRepository.save(new ApiConsumersRepository.ApiConsumer("testuser", BCrypt.hashpw("testkey", BCrypt.gensalt()), ""));
-        apiConsumerConfigurationRepository.save(new ApiConsumerConfigurationRepository.ApiConsumerConfiguration(null, "testuser", "", true, "bcrypt"));
+        apiConsumersRepository.save(new ApiConsumersRepository.ApiConsumer("testuser", BCrypt.hashpw("testkey", BCrypt.gensalt()), "ADMIN,USER"));
+        String salt = KeyGenerators.string().generateKey();
+        TextEncryptor encryptor = Encryptors.text("testkey", salt);
+        String encryptedKey = encryptor.encrypt("encryption_key");
+        String saltAndKey = salt + ":::" + encryptedKey;
+        apiConsumerConfigurationRepository.save(new ApiConsumerConfigurationRepository.ApiConsumerConfiguration(null, "testuser", saltAndKey, true, "DEFAULT_SHA256ANDBCRYPT"));
     }
 
     private static class HttpBasicAuthFilter implements ClientRequestFilter {
@@ -58,5 +65,4 @@ public abstract class IT {
     protected WebTarget webTarget(Client client) {
         return client.target("http://localhost:" + port);
     }
-
 }

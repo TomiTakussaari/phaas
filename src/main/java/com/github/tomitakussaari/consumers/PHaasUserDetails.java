@@ -1,5 +1,6 @@
 package com.github.tomitakussaari.consumers;
 
+import com.github.tomitakussaari.model.ProtectionScheme;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,33 +18,34 @@ public class PHaasUserDetails implements UserDetails {
 
     private final ApiConsumersRepository.ApiConsumer apiConsumer;
     private final List<ApiConsumerConfigurationRepository.ApiConsumerConfiguration> configurations;
-    private final String apiConsumerConfigurationEncKeySalt;
 
-    public String activeEncryptionKey() {
-        TextEncryptor decryptor = Encryptors.text(findPassword(), apiConsumerConfigurationEncKeySalt);
-
+    public ProtectionScheme activeProtectionScheme() {
         return configurations.stream().filter(ApiConsumerConfigurationRepository.ApiConsumerConfiguration::isActive).findFirst()
-                .map(activeConfig -> decryptor.decrypt(activeConfig.getEnc_key()))
+                .map(activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), encryptionKey(activeConfig)))
                 .orElseThrow(() -> new RuntimeException("Unable to find active encryption key"));
+    }
 
+    private String encryptionKey(ApiConsumerConfigurationRepository.ApiConsumerConfiguration activeConfig) {
+        String salt = activeConfig.getEnc_key().split(":::")[0];
+        String encryptedVal = activeConfig.getEnc_key().split(":::")[1];
+        TextEncryptor decryptor = Encryptors.text(findPassword(), salt);
+        return decryptor.decrypt(encryptedVal);
     }
 
     private String findPassword() {
         return SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
     }
 
-    public String encryptionKey(int id) {
-        TextEncryptor decryptor = Encryptors.text(findPassword(), apiConsumerConfigurationEncKeySalt);
-
+    public ProtectionScheme protectionScheme(int id) {
         return configurations.stream().filter(config -> config.getId().equals(id)).findFirst()
-                .map(activeConfig -> decryptor.decrypt(activeConfig.getEnc_key()))
-                .orElseThrow(() -> new RuntimeException("Unable to find encryption key by id: "+id));
+                .map(activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), encryptionKey(activeConfig)))
+                .orElseThrow(() -> new RuntimeException("Unable to find encryption key by id: " + id));
 
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return  apiConsumer.getRoles().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return apiConsumer.getRoles().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
     @Override

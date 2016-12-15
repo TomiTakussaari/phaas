@@ -25,12 +25,12 @@ public class PasswordApi {
 
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
     public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @AuthenticationPrincipal PHaasUserDetails userDetails) {
-        return passwordHasher.hash(request, userDetails.activeEncryptionKey());
+        return passwordHasher.hash(request, userDetails.activeProtectionScheme());
     }
 
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
     public PasswordVerifyResult verifyPassword(@RequestBody PasswordVerifyRequest request, @AuthenticationPrincipal PHaasUserDetails userDetails) {
-        return passwordVerifier.verify(request, userDetails.encryptionKey(request.encryptionKeyId()));
+        return passwordVerifier.verify(request, userDetails.protectionScheme(request.schemeId()));
     }
 
 

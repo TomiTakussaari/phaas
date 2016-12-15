@@ -12,7 +12,15 @@ public class PasswordVerifyRequest {
     @NonNull
     private final String hash;
 
-    public int encryptionKeyId() {
-        return Integer.valueOf(hash.substring(0, 1));
+    public int schemeId() {
+        return Integer.valueOf(hash.split(":::")[0]);
+    }
+
+    public String encryptionSalt() {
+        return hash.split(":::")[1];
+    }
+
+    public String encryptedPasswordHash() {
+        return hash.split(":::")[2];
     }
 }

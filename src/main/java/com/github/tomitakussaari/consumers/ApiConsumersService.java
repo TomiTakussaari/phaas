@@ -14,7 +14,6 @@ public class ApiConsumersService implements UserDetailsService {
 
     private final ApiConsumerConfigurationRepository apiConsumerConfigurationRepository;
     private final ApiConsumersRepository apiConsumersRepository;
-    private final Environment environment;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -22,6 +21,6 @@ public class ApiConsumersService implements UserDetailsService {
         if (apiConsumer == null) {
             throw new UsernameNotFoundException("not found: " + username);
         }
-        return new PHaasUserDetails(apiConsumer, apiConsumerConfigurationRepository.findByUserName(username), environment.getProperty("phaas.apiConsumerConfigurationEncKeySalt"));
+        return new PHaasUserDetails(apiConsumer, apiConsumerConfigurationRepository.findByUserName(username));
     }
 }
