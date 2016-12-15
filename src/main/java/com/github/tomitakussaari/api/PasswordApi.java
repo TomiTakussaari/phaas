@@ -30,7 +30,7 @@ public class PasswordApi {
 
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
     public PasswordVerifyResult verifyPassword(@RequestBody PasswordVerifyRequest request, @AuthenticationPrincipal PHaasUserDetails userDetails) {
-        return passwordVerifier.verify(request, userDetails.protectionScheme(request.schemeId()));
+        return passwordVerifier.verify(request, userDetails.protectionScheme(request.schemeId()), userDetails.activeProtectionScheme());
     }
 
 

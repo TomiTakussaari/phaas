@@ -1,7 +1,9 @@
 package com.github.tomitakussaari.model;
 
 import com.google.common.hash.Hashing;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,9 +13,12 @@ import java.util.function.Supplier;
 
 @RequiredArgsConstructor
 @Getter
+@EqualsAndHashCode
 public class ProtectionScheme {
     private final int id;
+    @NonNull
     private final String algorithm;
+    @NonNull
     private final String encryptionKey;
 
     public PasswordEncoder passwordEncoder() {
