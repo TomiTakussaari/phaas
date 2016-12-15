@@ -21,13 +21,9 @@ public class PasswordVerifier {
         return new PasswordVerifyResult(upgradedHash, passwordValid);
     }
 
-    private Optional<String> getUpgradedHash(PasswordVerifyRequest request, ProtectionScheme schemeForRequest, ProtectionScheme activeSchemeForUser, boolean passwordValid) {
-        return passwordValid ? rehashPasswordIfNeeded(request.getPasswordCandidate(), schemeForRequest, activeSchemeForUser) : Optional.empty();
-    }
-
-    private Optional<String> rehashPasswordIfNeeded(String password, ProtectionScheme currentScheme, ProtectionScheme newScheme) {
-        if(!currentScheme.equals(newScheme)) {
-            return Optional.of(passwordReHasher.hash(new PasswordHashRequest(password), newScheme).getHash());
+    private Optional<String> getUpgradedHash(PasswordVerifyRequest request, ProtectionScheme currentScheme, ProtectionScheme newScheme, boolean passwordValid) {
+        if(!currentScheme.equals(newScheme) && passwordValid) {
+            return Optional.of(passwordReHasher.hash(new PasswordHashRequest(request.getPasswordCandidate()), newScheme).getHash());
         }
         return Optional.empty();
     }

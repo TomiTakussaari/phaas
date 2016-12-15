@@ -31,6 +31,14 @@ public class PasswordVerifierTest {
     }
 
     @Test
+    public void doesNotReturnRehashedPasswordWhenPasswordIsNotCorrect() {
+        HashedPassword hash = hasher.hash(new PasswordHashRequest("password"), currentProtectionScheme);
+        PasswordVerifyResult result = verifier.verify(new PasswordVerifyRequest("password2", hash.getHash()), currentProtectionScheme, newProtectionScheme);
+        assertFalse(result.isValid());
+        assertFalse(result.getUpgradedHash().isPresent());
+    }
+
+    @Test
     public void rehashedPasswordHashIsValid() {
         HashedPassword hash = hasher.hash(new PasswordHashRequest("password"), currentProtectionScheme);
         String rehashedPassword = verifier.verify(new PasswordVerifyRequest("password", hash.getHash()), currentProtectionScheme, newProtectionScheme).getUpgradedHash().get();
