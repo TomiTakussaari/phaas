@@ -2,7 +2,6 @@ package com.github.tomitakussaari.consumers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +20,6 @@ public class ApiConsumersService implements UserDetailsService {
         if (apiConsumer == null) {
             throw new UsernameNotFoundException("not found: " + username);
         }
-        return new PHaasUserDetails(apiConsumer, apiConsumerConfigurationRepository.findByUserName(username));
+        return new PhaasUserDetails(apiConsumer, apiConsumerConfigurationRepository.findByUserName(username));
     }
 }

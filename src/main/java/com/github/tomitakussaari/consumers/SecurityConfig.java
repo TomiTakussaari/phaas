@@ -8,10 +8,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
     @Autowired
     private ApiConsumersService apiConsumersService;
@@ -25,10 +32,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .requestMatchers(request -> !"/".equals(request.getServletPath())).authenticated()
+                .requestMatchers((RequestMatcher) this::requiresAuthentication).authenticated()
                 .and().httpBasic().realmName("phaas")
                 .and().csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
+    }
+
+    private boolean requiresAuthentication(HttpServletRequest httpServletRequest) {
+        return !"/".equals(httpServletRequest.getServletPath()) &&
+                UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
     }
 }
