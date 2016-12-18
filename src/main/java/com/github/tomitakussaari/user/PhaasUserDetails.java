@@ -47,7 +47,7 @@ public class PhaasUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return userDTO.getRoles().stream().map(SimpleGrantedAuthority::new).collect(toList());
+        return userDTO.roles().stream().map(SimpleGrantedAuthority::new).collect(toList());
     }
 
     @Override

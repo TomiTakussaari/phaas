@@ -1,6 +1,6 @@
 package com.github.tomitakussaari.user;
 
-import com.github.tomitakussaari.model.ProtectionScheme;
+import com.github.tomitakussaari.model.ProtectionScheme.PasswordEncodingAlgorithm;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +33,7 @@ public interface PhaasUserConfigurationRepository extends CrudRepository<PhaasUs
         private String userName;
         private String dataProtectionKey;
         private boolean active;
-        private ProtectionScheme.PasswordEncodingAlgorithm algorithm;
+        private PasswordEncodingAlgorithm algorithm;
 
         public String decryptDataProtectionKey(String encryptionPassword) {
             TextEncryptor decryptor = Encryptors.text(encryptionPassword, salt());

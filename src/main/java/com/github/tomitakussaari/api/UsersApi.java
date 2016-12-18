@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +26,7 @@ import static java.util.stream.Collectors.toList;
 public class UsersApi {
 
     private final ApiUsersService apiUsersService;
+    private final Environment environment;
 
     @ApiOperation(value = "Returns information about current user")
     @Secured({ApiUsersService.USER_ROLE_VALUE})
@@ -36,6 +38,7 @@ public class UsersApi {
     @Secured({ApiUsersService.ADMIN_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public CreateUserResponse createUser(@RequestBody CreateUserRequest request) {
+        rejectIfUserDatabaseIsImmutable();
         String password = RandomStringUtils.random(30);
         apiUsersService.createUser(request.getUserName(), request.getAlgorithm(), request.getRoles(), password);
         return new CreateUserResponse(password);
@@ -48,6 +51,12 @@ public class UsersApi {
                 .supportedProtectionSchemes(userDetails.protectionSchemes().stream().map(ProtectionScheme::toPublicScheme).collect(toList()))
                 .roles(userDetails.getAuthorities().stream().map(authority -> ApiUsersService.ROLE.fromDbValue(authority.getAuthority())).collect(toList()))
                 .build();
+    }
+
+    private void rejectIfUserDatabaseIsImmutable() {
+        if(environment.getProperty("immutable.users.db", Boolean.class)) {
+            throw new UnsupportedOperationException("");
+        }
     }
 
     @Data

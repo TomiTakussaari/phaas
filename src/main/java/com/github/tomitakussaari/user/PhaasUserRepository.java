@@ -7,7 +7,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public interface PhaasUserRepository extends CrudRepository<PhaasUserRepository.UserDTO, String> {
 
@@ -24,10 +23,10 @@ public interface PhaasUserRepository extends CrudRepository<PhaasUserRepository.
         private String userName;
         @NonNull
         private String passwordHash;
-
+        @NonNull
         private String roles;
 
-        public List<String> getRoles() {
+        public List<String> roles() {
             return Arrays.asList(roles.split(","));
         }
 

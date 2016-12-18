@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Component
@@ -49,9 +50,13 @@ public class ApiUsersService implements UserDetailsService {
                 .active(true).algorithm(algorithm).userName(userName)
                 .dataProtectionKey(createEncryptionKey(password))
                 .build();
+        create(userDTO, configurationDTO);
+    }
+
+    void create(UserDTO userDTO, UserConfigurationDTO...configurationDTO) {
         UserDTO savedUser = phaasUserRepository.save(userDTO);
-        UserConfigurationDTO savedConfiguration = phaasUserConfigurationRepository.save(configurationDTO);
-        log.info("Created user: {} with algorithm: {}", savedUser.getUserName(), savedConfiguration.getAlgorithm());
+        Stream.of(configurationDTO).forEach(phaasUserConfigurationRepository::save);
+        log.info("Created user: {}", savedUser.getUserName());
     }
 
     private String createEncryptionKey(String password) {
