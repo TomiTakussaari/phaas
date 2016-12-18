@@ -1,6 +1,8 @@
 package com.github.tomitakussaari.user;
 
 import com.github.tomitakussaari.model.ProtectionScheme;
+import com.github.tomitakussaari.user.PhaasUserConfigurationRepository.UserConfigurationDTO;
+import com.github.tomitakussaari.user.PhaasUserRepository.UserDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,39 @@ public class ApiUsersService implements UserDetailsService {
 
     public static final String ADMIN_ROLE_VALUE = "ROLE_ADMIN";
     public static final String USER_ROLE_VALUE = "ROLE_USER";
+    private final PhaasUserConfigurationRepository phaasUserConfigurationRepository;
+    private final PhaasUserRepository phaasUserRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        UserDTO userDTO = phaasUserRepository.findByUserName(username);
+        if (userDTO == null) {
+            throw new UsernameNotFoundException("not found: " + username);
+        }
+        return new PhaasUserDetails(userDTO, phaasUserConfigurationRepository.findByUserName(username));
+    }
+
+    @Transactional
+    public void createUser(String userName, ProtectionScheme.PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String password) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        UserDTO userDTO = new UserDTO(userName, encoder.encode(password), roles.stream().map(ROLE::getValue).collect(Collectors.joining(",")));
+
+        UserConfigurationDTO configurationDTO = UserConfigurationDTO.builder()
+                .active(true).algorithm(algorithm).userName(userName)
+                .dataProtectionKey(createEncryptionKey(password))
+                .build();
+        UserDTO savedUser = phaasUserRepository.save(userDTO);
+        UserConfigurationDTO savedConfiguration = phaasUserConfigurationRepository.save(configurationDTO);
+        log.info("Created user: {} with algorithm: {}", savedUser.getUserName(), savedConfiguration.getAlgorithm());
+    }
+
+    private String createEncryptionKey(String password) {
+        String salt = KeyGenerators.string().generateKey();
+        String encryptionKey = RandomStringUtils.random(20);
+        TextEncryptor encryptor = Encryptors.text(password, salt);
+        String encryptedKey = encryptor.encrypt(encryptionKey);
+        return salt + ":::" + encryptedKey;
+    }
 
     @RequiredArgsConstructor
     public enum ROLE {
@@ -44,37 +79,4 @@ public class ApiUsersService implements UserDetailsService {
         }
     }
 
-    private final PhaasUserConfigurationRepository phaasUserConfigurationRepository;
-    private final PhaasUserRepository phaasUserRepository;
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        PhaasUserRepository.UserDTO userDTO = phaasUserRepository.findByUserName(username);
-        if (userDTO == null) {
-            throw new UsernameNotFoundException("not found: " + username);
-        }
-        return new PhaasUserDetails(userDTO, phaasUserConfigurationRepository.findByUserName(username));
-    }
-
-    @Transactional
-    public void createUser(String userName, ProtectionScheme.PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String password) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        PhaasUserRepository.UserDTO userDTO = new PhaasUserRepository.UserDTO(userName, encoder.encode(password), roles.stream().map(ROLE::getValue).collect(Collectors.joining(",")));
-
-        PhaasUserConfigurationRepository.UserConfigurationDTO configurationDTO = PhaasUserConfigurationRepository.UserConfigurationDTO.builder()
-                .active(true).algorithm(algorithm).userName(userName)
-                .dataProtectionKey(createEncryptionKey(password))
-                .build();
-        PhaasUserRepository.UserDTO savedUser = phaasUserRepository.save(userDTO);
-        PhaasUserConfigurationRepository.UserConfigurationDTO savedConfiguration = phaasUserConfigurationRepository.save(configurationDTO);
-        log.info("Created user: {} with algorithm: {}", savedUser.getUserName(), savedConfiguration.getAlgorithm());
-    }
-
-    private String createEncryptionKey(String password) {
-        String salt = KeyGenerators.string().generateKey();
-        String encryptionKey = RandomStringUtils.random(20);
-        TextEncryptor encryptor = Encryptors.text(password, salt);
-        String encryptedKey = encryptor.encrypt(encryptionKey);
-        return salt + ":::" + encryptedKey;
-    }
 }
