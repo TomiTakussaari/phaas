@@ -1,4 +1,4 @@
-package com.github.tomitakussaari.consumers;
+package com.github.tomitakussaari.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -21,11 +21,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
     @Autowired
-    private ApiConsumersService apiConsumersService;
+    private ApiUsersService apiUsersService;
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.eraseCredentials(false).userDetailsService(apiConsumersService).passwordEncoder(new BCryptPasswordEncoder());
+        auth.eraseCredentials(false).userDetailsService(apiUsersService).passwordEncoder(new BCryptPasswordEncoder());
     }
 
 

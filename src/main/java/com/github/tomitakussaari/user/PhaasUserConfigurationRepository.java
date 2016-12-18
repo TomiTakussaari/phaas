@@ -1,6 +1,8 @@
-package com.github.tomitakussaari.consumers;
+package com.github.tomitakussaari.user;
 
+import com.github.tomitakussaari.model.ProtectionScheme;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.repository.CrudRepository;
@@ -14,23 +16,24 @@ import javax.persistence.Id;
 import java.util.List;
 
 
-public interface ApiConsumerConfigurationRepository extends CrudRepository<ApiConsumerConfigurationRepository.ApiConsumerConfiguration, Integer> {
+public interface PhaasUserConfigurationRepository extends CrudRepository<PhaasUserConfigurationRepository.UserConfigurationDTO, Integer> {
 
 
-    List<ApiConsumerConfiguration> findByUserName(String userName);
+    List<UserConfigurationDTO> findByUserName(String userName);
 
     @Entity
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    class ApiConsumerConfiguration {
+    @Builder
+    class UserConfigurationDTO {
         @Id
         @GeneratedValue(strategy = GenerationType.AUTO)
         private Integer id;
         private String userName;
         private String dataProtectionKey;
         private boolean active;
-        private String algorithm;
+        private ProtectionScheme.PasswordEncodingAlgorithm algorithm;
 
         public String decryptDataProtectionKey(String encryptionPassword) {
             TextEncryptor decryptor = Encryptors.text(encryptionPassword, salt());

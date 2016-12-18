@@ -12,7 +12,6 @@ public class PasswordHasher {
     public HashedPassword hash(PasswordHashRequest request, ProtectionScheme protectionScheme) {
         String salt = KeyGenerators.string().generateKey();
         TextEncryptor encryptor = Encryptors.text(protectionScheme.getEncryptionKey(), salt);
-
         String hashedPassword = protectionScheme.passwordEncoder().encode(request.getRawPassword());
         return HashedPassword.from(protectionScheme.getId(), salt, encryptor.encrypt(hashedPassword));
     }

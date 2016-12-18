@@ -1,4 +1,4 @@
-package com.github.tomitakussaari.consumers;
+package com.github.tomitakussaari.user;
 
 import lombok.*;
 import org.springframework.data.repository.CrudRepository;
@@ -9,17 +9,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface ApiConsumersRepository extends CrudRepository<ApiConsumersRepository.ApiConsumer, String> {
+public interface PhaasUserRepository extends CrudRepository<PhaasUserRepository.UserDTO, String> {
 
 
-    ApiConsumer findByUserName(String userName);
+    UserDTO findByUserName(String userName);
 
 
     @Entity
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    class ApiConsumer {
+    class UserDTO {
 
         @Id
         @NonNull
@@ -33,8 +33,5 @@ public interface ApiConsumersRepository extends CrudRepository<ApiConsumersRepos
             return Arrays.asList(roles.split(","));
         }
 
-        public void setRoles(List<String> roles) {
-            this.roles = roles.stream().collect(Collectors.joining(","));
-        }
     }
 }

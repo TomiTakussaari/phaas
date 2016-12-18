@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.Filter;
@@ -34,6 +35,7 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 @Configuration
 @EnableJpaRepositories
+@EnableGlobalMethodSecurity(securedEnabled = true)
 public class AppConfig {
 
     @Bean

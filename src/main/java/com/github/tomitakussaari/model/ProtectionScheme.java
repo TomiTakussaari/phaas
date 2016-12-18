@@ -1,10 +1,7 @@
 package com.github.tomitakussaari.model;
 
 import com.google.common.hash.Hashing;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -17,15 +14,26 @@ import java.util.function.Supplier;
 public class ProtectionScheme {
     private final int id;
     @NonNull
-    private final String algorithm;
+    private final PasswordEncodingAlgorithm algorithm;
     @NonNull
     private final String encryptionKey;
 
     public PasswordEncoder passwordEncoder() {
-        return PasswordEncodingAlgorithm.valueOf(algorithm).encoder();
+        return algorithm.encoder();
     }
 
-    enum PasswordEncodingAlgorithm {
+    public PublicProtectionScheme toPublicScheme() {
+        return new PublicProtectionScheme(id, algorithm);
+    }
+
+    @Data
+    public static class PublicProtectionScheme {
+        private final int id;
+        @NonNull
+        private final ProtectionScheme.PasswordEncodingAlgorithm algorithm;
+    }
+
+    public enum PasswordEncodingAlgorithm {
         DEFAULT_SHA256ANDBCRYPT(SHA256AndBCryptPasswordEncoder::new);
 
         private final Supplier<PasswordEncoder> supplier;

@@ -11,8 +11,8 @@ public class PasswordVerifierTest {
 
     private final PasswordHasher hasher = new PasswordHasher();
     private final PasswordVerifier verifier = new PasswordVerifier();
-    private final ProtectionScheme currentProtectionScheme = new ProtectionScheme(1, "DEFAULT_SHA256ANDBCRYPT", "encryption_key");
-    private final ProtectionScheme newProtectionScheme = new ProtectionScheme(1, "DEFAULT_SHA256ANDBCRYPT", "encryption_key2");
+    private final ProtectionScheme currentProtectionScheme = new ProtectionScheme(1, ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, "encryption_key");
+    private final ProtectionScheme newProtectionScheme = new ProtectionScheme(1, ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, "encryption_key2");
 
     @Test
     public void doesNotReturnRehashedPasswordWhenActiveSchemeIsSameAsCurrent() {
