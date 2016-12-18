@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.github.tomitakussaari.user.PhaasUserDetails;
 import com.github.tomitakussaari.util.PasswordHasher;
 import com.github.tomitakussaari.util.PasswordVerifier;
 import com.zaxxer.hikari.HikariDataSource;
 import io.dropwizard.servlets.ThreadNameFilter;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -19,8 +21,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.inject.Provider;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -79,15 +85,18 @@ public class AppConfig {
         public static final String MDC_REQUEST_ID = "requestId";
         public static final String MDC_PATH = "path";
         public static final String MDC_IP = "ip";
+        public static final String MDC_USER = "user";
 
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
             final String requestId = ofNullable(trimToNull(request.getHeader(X_REQUEST_ID))).orElse(UUID.randomUUID().toString());
             try {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 response.setHeader(X_REQUEST_ID, requestId);
                 MDC.put(MDC_PATH, getPath(request));
                 MDC.put(MDC_IP, getRemoteIp(request));
                 MDC.put(MDC_REQUEST_ID, requestId);
+                MDC.put(MDC_USER, authentication != null ? authentication.getName() : "");
                 filterChain.doFilter(request, response);
             } finally {
                 MDC.clear();

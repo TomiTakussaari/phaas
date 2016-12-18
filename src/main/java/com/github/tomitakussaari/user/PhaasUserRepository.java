@@ -11,9 +11,7 @@ import java.util.stream.Collectors;
 
 public interface PhaasUserRepository extends CrudRepository<PhaasUserRepository.UserDTO, String> {
 
-
     UserDTO findByUserName(String userName);
-
 
     @Entity
     @Data

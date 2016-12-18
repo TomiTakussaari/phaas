@@ -1,6 +1,7 @@
 package com.github.tomitakussaari.user;
 
 import com.github.tomitakussaari.model.ProtectionScheme;
+import com.github.tomitakussaari.model.ProtectionSchemeNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,7 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
 public class PhaasUserDetails implements UserDetails {
@@ -21,9 +23,8 @@ public class PhaasUserDetails implements UserDetails {
     public ProtectionScheme activeProtectionScheme() {
         return configurations.stream().filter(PhaasUserConfigurationRepository.UserConfigurationDTO::isActive).findFirst()
                 .map(toProtectionScheme())
-                .orElseThrow(() -> new RuntimeException("Unable to find active encryption key"));
+                .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find active encryption key for user: " + getUsername()));
     }
-
 
     private String findPassword() {
         return SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
@@ -32,13 +33,11 @@ public class PhaasUserDetails implements UserDetails {
     public ProtectionScheme protectionScheme(int id) {
         return configurations.stream().filter(config -> config.getId().equals(id)).findFirst()
                 .map(toProtectionScheme())
-                .orElseThrow(() -> new RuntimeException("Unable to find encryption key by id: " + id));
+                .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find encryption key by id: " + id));
     }
 
     public List<ProtectionScheme> protectionSchemes() {
-        return configurations.stream()
-                .map(toProtectionScheme())
-                .collect(Collectors.toList());
+        return configurations.stream().map(toProtectionScheme()).collect(toList());
     }
 
 
@@ -48,7 +47,7 @@ public class PhaasUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return userDTO.getRoles().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+        return userDTO.getRoles().stream().map(SimpleGrantedAuthority::new).collect(toList());
     }
 
     @Override

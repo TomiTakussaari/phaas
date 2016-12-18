@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @RestController
 @RequestMapping("/users")
@@ -34,18 +35,18 @@ public class UsersApi {
 
     @Secured({ApiUsersService.ADMIN_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
-    public NewUserResponse createUser(@RequestBody NewUserRequest request) {
-        String password = RandomStringUtils.randomAlphanumeric(30);
+    public CreateUserResponse createUser(@RequestBody CreateUserRequest request) {
+        String password = RandomStringUtils.random(30);
         apiUsersService.createUser(request.getUserName(), request.getAlgorithm(), request.getRoles(), password);
-        return new NewUserResponse(password);
+        return new CreateUserResponse(password);
     }
 
     private PublicUser toPublicUser(PhaasUserDetails userDetails) {
         return PublicUser.builder()
                 .userName(userDetails.getUsername())
                 .currentProtectionScheme(userDetails.activeProtectionScheme().toPublicScheme())
-                .supportedProtectionSchemes(userDetails.protectionSchemes().stream().map(ProtectionScheme::toPublicScheme).collect(Collectors.toList()))
-                .roles(userDetails.getAuthorities().stream().map(authority -> ApiUsersService.ROLE.fromDbValue(authority.getAuthority())).collect(Collectors.toList()))
+                .supportedProtectionSchemes(userDetails.protectionSchemes().stream().map(ProtectionScheme::toPublicScheme).collect(toList()))
+                .roles(userDetails.getAuthorities().stream().map(authority -> ApiUsersService.ROLE.fromDbValue(authority.getAuthority())).collect(toList()))
                 .build();
     }
 
@@ -60,7 +61,7 @@ public class UsersApi {
 
     @RequiredArgsConstructor
     @Getter
-    static class NewUserRequest {
+    static class CreateUserRequest {
         @NonNull
         private final String userName;
         @NonNull
@@ -71,7 +72,7 @@ public class UsersApi {
 
     @RequiredArgsConstructor
     @Getter
-    static class NewUserResponse {
+    static class CreateUserResponse {
         private final String generatedPassword;
     }
 

@@ -1,5 +1,6 @@
 package com.github.tomitakussaari.api;
 
+import com.github.tomitakussaari.model.ProtectionSchemeNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,12 @@ public class ExceptionAdvisor {
     public ResponseEntity<ErrorMessage> accessDenied(AccessDeniedException e) {
         log.warn("Access was denied: " + e.getMessage(), e);
         return responseEntity("No access", e, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ProtectionSchemeNotFoundException.class)
+    public ResponseEntity<ErrorMessage> accessDenied(ProtectionSchemeNotFoundException e) {
+        log.warn("ProtectionScheme was not found: " + e.getMessage(), e);
+        return responseEntity("ProtectionScheme was not found", e, HttpStatus.BAD_REQUEST);
     }
 
     private ResponseEntity<ErrorMessage> responseEntity(String message, Exception e, HttpStatus status) {

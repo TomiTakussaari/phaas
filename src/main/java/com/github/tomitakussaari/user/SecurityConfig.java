@@ -18,16 +18,17 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
+    private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/", "/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
     @Autowired
     private ApiUsersService apiUsersService;
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.eraseCredentials(false).userDetailsService(apiUsersService).passwordEncoder(new BCryptPasswordEncoder());
+        auth.eraseCredentials(false)
+                .userDetailsService(apiUsersService)
+                .passwordEncoder(new BCryptPasswordEncoder());
     }
-
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -36,11 +37,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and().httpBasic().realmName("phaas")
                 .and().csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
     }
 
     private boolean requiresAuthentication(HttpServletRequest httpServletRequest) {
-        return !"/".equals(httpServletRequest.getServletPath()) &&
-                UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
+        return UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
     }
 }
