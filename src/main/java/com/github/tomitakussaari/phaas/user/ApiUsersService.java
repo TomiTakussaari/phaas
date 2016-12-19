@@ -1,7 +1,10 @@
 package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.model.ProtectionScheme;
-import com.github.tomitakussaari.phaas.user.PhaasUserConfigurationRepository.UserConfigurationDTO;
+import com.github.tomitakussaari.phaas.user.dao.PhaasUserConfigurationRepository;
+import com.github.tomitakussaari.phaas.user.dao.PhaasUserRepository;
+import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
+import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,32 +32,33 @@ public class ApiUsersService implements UserDetailsService {
 
     public static final String ADMIN_ROLE_VALUE = "ROLE_ADMIN";
     public static final String USER_ROLE_VALUE = "ROLE_USER";
+
     private final PhaasUserConfigurationRepository phaasUserConfigurationRepository;
     private final PhaasUserRepository phaasUserRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        PhaasUserRepository.UserDTO userDTO = phaasUserRepository.findByUserName(username);
+        UserDTO userDTO = phaasUserRepository.findByUserName(username);
         if (userDTO == null) {
             throw new UsernameNotFoundException("not found: " + username);
         }
-        return new PhaasUserDetails(userDTO, phaasUserConfigurationRepository.findByUserName(username));
+        return new PhaasUserDetails(userDTO, phaasUserConfigurationRepository.findByUser(username));
     }
 
     @Transactional
     public void createUser(String userName, ProtectionScheme.PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String password) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        PhaasUserRepository.UserDTO userDTO = new PhaasUserRepository.UserDTO(userName, encoder.encode(password), roles.stream().map(ROLE::getValue).collect(Collectors.joining(",")));
+        UserDTO userDTO = new UserDTO(null, userName, encoder.encode(password), roles.stream().map(ROLE::getValue).collect(Collectors.joining(",")));
 
         UserConfigurationDTO configurationDTO = UserConfigurationDTO.builder()
-                .active(true).algorithm(algorithm).userName(userName)
+                .active(true).algorithm(algorithm).user(userDTO.getUserName())
                 .dataProtectionKey(createEncryptionKey(password))
                 .build();
         create(userDTO, configurationDTO);
     }
 
-    void create(PhaasUserRepository.UserDTO userDTO, UserConfigurationDTO...configurationDTO) {
-        PhaasUserRepository.UserDTO savedUser = phaasUserRepository.save(userDTO);
+    void create(UserDTO userDTO, UserConfigurationDTO...configurationDTO) {
+        UserDTO savedUser = phaasUserRepository.save(userDTO);
         Stream.of(configurationDTO).forEach(phaasUserConfigurationRepository::save);
         log.info("Created user: {}", savedUser.getUserName());
     }
@@ -64,6 +69,15 @@ public class ApiUsersService implements UserDetailsService {
         TextEncryptor encryptor = Encryptors.text(password, salt);
         String encryptedKey = encryptor.encrypt(encryptionKey);
         return salt + ":::" + encryptedKey;
+    }
+
+    @Transactional
+    public void removeUser(String userName) {
+        UserDTO byUserName = phaasUserRepository.findByUserName(userName);
+        if(byUserName != null) {
+            phaasUserConfigurationRepository.findByUser(userName).forEach(phaasUserConfigurationRepository::delete);
+            phaasUserRepository.delete(byUserName.getId());
+        }
     }
 
     @RequiredArgsConstructor

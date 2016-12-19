@@ -2,6 +2,8 @@ package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import com.github.tomitakussaari.phaas.model.ProtectionSchemeNotFoundException;
+import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
+import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,11 +19,11 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor
 public class PhaasUserDetails implements UserDetails {
 
-    private final PhaasUserRepository.UserDTO userDTO;
-    private final List<PhaasUserConfigurationRepository.UserConfigurationDTO> configurations;
+    private final UserDTO userDTO;
+    private final List<UserConfigurationDTO> configurations;
 
     public ProtectionScheme activeProtectionScheme() {
-        return configurations.stream().filter(PhaasUserConfigurationRepository.UserConfigurationDTO::isActive).findFirst()
+        return configurations.stream().filter(UserConfigurationDTO::isActive).findFirst()
                 .map(toProtectionScheme())
                 .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find active encryption key for user: " + getUsername()));
     }
@@ -41,7 +43,7 @@ public class PhaasUserDetails implements UserDetails {
     }
 
 
-    private Function<PhaasUserConfigurationRepository.UserConfigurationDTO, ProtectionScheme> toProtectionScheme() {
+    private Function<UserConfigurationDTO, ProtectionScheme> toProtectionScheme() {
         return activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.decryptDataProtectionKey(findPassword()));
     }
 

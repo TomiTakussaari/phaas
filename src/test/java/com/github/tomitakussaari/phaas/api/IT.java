@@ -4,6 +4,7 @@ import com.github.tomitakussaari.phaas.Application;
 import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import com.github.tomitakussaari.phaas.user.ApiUsersService;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public abstract class IT {
     protected static final String USER_PASSWORD = "testpassword";
 
     @Autowired
-    private ApiUsersService apiUsersService;
+    protected ApiUsersService apiUsersService;
 
     @Value("${local.server.port}")
     int port;
@@ -36,6 +37,11 @@ public abstract class IT {
     @Before
     public void initialize() {
         apiUsersService.createUser(USER_NAME, ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD);
+    }
+
+    @After
+    public void clearDb() {
+        apiUsersService.removeUser(USER_NAME);
     }
 
     private static class HttpBasicAuthFilter implements ClientRequestFilter {

@@ -2,6 +2,7 @@ package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.user.ApiUsersService;
 import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.Test;
 
 import javax.ws.rs.core.MediaType;
@@ -59,5 +60,12 @@ public class UsersApiIntegrationTest extends IT {
         Map newUserResponse = authenticatedWebTarget().path("/users").request()
                 .post(json(of("userName", username, "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", roles)), Map.class);
         return (String) newUserResponse.get("generatedPassword");
+    }
+
+    @After
+    public void clearUsers() {
+        apiUsersService.removeUser("user2");
+        apiUsersService.removeUser("user3");
+        apiUsersService.removeUser("user4");
     }
 }
