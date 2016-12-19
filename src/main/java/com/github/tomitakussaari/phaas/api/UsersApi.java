@@ -27,12 +27,14 @@ public class UsersApi {
     private final ApiUsersService apiUsersService;
     private final Environment environment;
 
+
     @ApiOperation(value = "Returns information about current user")
     @RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/me")
     public PublicUser whoAmI(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         return toPublicUser(userDetails);
     }
 
+    @ApiOperation(value = "Creates new user, only usable by admins")
     @Secured({ApiUsersService.ADMIN_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public CreateUserResponse createUser(@RequestBody CreateUserRequest request) {
@@ -40,12 +42,14 @@ public class UsersApi {
         return new CreateUserResponse(apiUsersService.createUser(request.getUserName(), request.getAlgorithm(), request.getRoles()));
     }
 
+    @ApiOperation(value = "Lists all users, only usable by admins")
     @Secured({ApiUsersService.ADMIN_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.GET, produces = "application/json")
     public List<PublicUser> listUsers() {
         return apiUsersService.findAll().stream().map(this::toPublicUser).collect(toList());
     }
 
+    @ApiOperation(value = "Deletes user, only usable by admins")
     @Secured({ApiUsersService.ADMIN_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.DELETE, produces = "application/json", path = "/{userName}")
     public void deleteUser(@PathVariable("userName") String userName) {
@@ -53,6 +57,7 @@ public class UsersApi {
         apiUsersService.deleteUser(userName);
     }
 
+    @ApiOperation(value = "Creates new protectionscheme and makes it active")
     @RequestMapping(method = RequestMethod.POST, produces = "application/json", path = "/new-algorithm")
     public void newProtectionScheme(@RequestBody ProtectionSchemeRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         rejectIfUserDatabaseIsImmutable();
