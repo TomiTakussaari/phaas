@@ -80,6 +80,7 @@ public class AppConfig {
 
         public static final String MDC_REQUEST_ID = "requestId";
         public static final String MDC_PATH = "path";
+        public static final String MDC_METHOD = "method";
         public static final String MDC_IP = "ip";
         public static final String MDC_USER = "user";
 
@@ -90,6 +91,7 @@ public class AppConfig {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 response.setHeader(X_REQUEST_ID, requestId);
                 MDC.put(MDC_PATH, getPath(request));
+                MDC.put(MDC_METHOD, request.getMethod());
                 MDC.put(MDC_IP, getRemoteIp(request));
                 MDC.put(MDC_REQUEST_ID, requestId);
                 MDC.put(MDC_USER, authentication != null ? authentication.getName() : "");
@@ -109,7 +111,7 @@ public class AppConfig {
             if(request.getQueryString() != null) {
                 path = path + "?"+request.getQueryString();
             }
-            return path+ " "+request.getMethod();
+            return path;
         }
 
         String getRemoteIp(HttpServletRequest request) {

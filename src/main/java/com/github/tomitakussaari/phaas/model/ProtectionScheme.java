@@ -2,7 +2,9 @@ package com.github.tomitakussaari.phaas.model;
 
 import com.google.common.hash.Hashing;
 import lombok.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.charset.StandardCharsets;
@@ -16,7 +18,7 @@ public class ProtectionScheme {
     @NonNull
     private final PasswordEncodingAlgorithm algorithm;
     @NonNull
-    private final String encryptionKey;
+    private final String protectedEncryptionKey;
 
     public PasswordEncoder passwordEncoder() {
         return algorithm.encoder();
@@ -25,6 +27,19 @@ public class ProtectionScheme {
     public PublicProtectionScheme toPublicScheme() {
         return new PublicProtectionScheme(id, algorithm);
     }
+
+    public String decryptDataProtectionKey(String userPassword) {
+        return Encryptors.text(userPassword, salt()).decrypt(cryptPassword());
+    }
+
+    private String salt() {
+        return protectedEncryptionKey.split(":::")[0];
+    }
+
+    private String cryptPassword() {
+        return protectedEncryptionKey.split(":::")[1];
+    }
+
 
     @Data
     public static class PublicProtectionScheme {

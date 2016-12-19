@@ -8,4 +8,5 @@ import java.util.List;
 public interface PhaasUserConfigurationRepository extends CrudRepository<UserConfigurationDTO, Integer> {
 
     List<UserConfigurationDTO> findByUser(String userName);
+    void deleteByUser(String userName);
 }

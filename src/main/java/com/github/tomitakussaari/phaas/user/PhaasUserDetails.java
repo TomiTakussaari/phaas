@@ -28,10 +28,6 @@ public class PhaasUserDetails implements UserDetails {
                 .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find active encryption key for user: " + getUsername()));
     }
 
-    private String findPassword() {
-        return SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
-    }
-
     public ProtectionScheme protectionScheme(int id) {
         return configurations.stream().filter(config -> config.getId().equals(id)).findFirst()
                 .map(toProtectionScheme())
@@ -42,9 +38,12 @@ public class PhaasUserDetails implements UserDetails {
         return configurations.stream().map(toProtectionScheme()).collect(toList());
     }
 
+    public String findCurrentUserPassword() {
+        return SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
+    }
 
     private Function<UserConfigurationDTO, ProtectionScheme> toProtectionScheme() {
-        return activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.decryptDataProtectionKey(findPassword()));
+        return activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.getDataProtectionKey());
     }
 
     @Override

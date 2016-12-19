@@ -22,7 +22,11 @@ public class UsersApiIntegrationTest extends IT {
 
     @Test
     public void findsOutCurrentUser() {
-        Map currentUser = authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
+        Map currentUser = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
+        validateUser(currentUser);
+    }
+
+    private void validateUser(Map currentUser) {
         assertEquals(USER_NAME, currentUser.get("userName"));
         assertThat((Iterable<String>) currentUser.get("roles"), Matchers.containsInAnyOrder("ADMIN", "USER"));
         assertEquals("DEFAULT_SHA256ANDBCRYPT", ((Map) currentUser.get("currentProtectionScheme")).get("algorithm"));
@@ -33,11 +37,30 @@ public class UsersApiIntegrationTest extends IT {
     public void canCreateUser() {
         String password = createUserAndReturnPassword("user2", singletonList(USER));
 
-        Map currentUser = unAuthenticatedWebTarget().path("/users").request()
+        Map currentUser = unAuthenticatedWebTarget().path("/users/me").request()
                 .header("Authorization", basicAuth("user2", password))
                 .accept(MediaType.APPLICATION_JSON).get(Map.class);
 
         assertEquals("user2", currentUser.get("userName"));
+    }
+
+    @Test
+    public void listsUsers() {
+        List users = authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class);
+        Map user = (Map) users.get(0);
+        validateUser(user);
+        assertEquals(1, users.size());
+    }
+
+    @Test
+    public void canDeleteUser() {
+        createUserAndReturnPassword("user2", singletonList(USER));
+        assertEquals(2, authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class).size());
+
+        Response delete = authenticatedWebTarget().path("/users/user2").request()
+                .accept(MediaType.APPLICATION_JSON).delete();
+        assertEquals(200, delete.getStatus());
+        assertEquals(1, authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class).size());
     }
 
     @Test
@@ -56,16 +79,11 @@ public class UsersApiIntegrationTest extends IT {
         assertEquals("No access", accessDenied.readEntity(Map.class).get("message"));
     }
 
-    private String createUserAndReturnPassword(String username, List<ApiUsersService.ROLE> roles) {
-        Map newUserResponse = authenticatedWebTarget().path("/users").request()
-                .post(json(of("userName", username, "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", roles)), Map.class);
-        return (String) newUserResponse.get("generatedPassword");
-    }
 
     @After
     public void clearUsers() {
-        apiUsersService.removeUser("user2");
-        apiUsersService.removeUser("user3");
-        apiUsersService.removeUser("user4");
+        apiUsersService.deleteUser("user2");
+        apiUsersService.deleteUser("user3");
+        apiUsersService.deleteUser("user4");
     }
 }

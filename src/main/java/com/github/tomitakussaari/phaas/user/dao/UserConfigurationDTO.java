@@ -2,11 +2,10 @@ package com.github.tomitakussaari.phaas.user.dao;
 
 import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import javax.persistence.*;
 
@@ -15,7 +14,7 @@ import javax.persistence.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Accessors(chain = true)
 public class UserConfigurationDTO {
 
     @Id
@@ -26,17 +25,5 @@ public class UserConfigurationDTO {
     private boolean active;
     private ProtectionScheme.PasswordEncodingAlgorithm algorithm;
 
-    public String decryptDataProtectionKey(String encryptionPassword) {
-        TextEncryptor decryptor = Encryptors.text(encryptionPassword, salt());
-        return decryptor.decrypt(cryptPassword());
-    }
-
-    private String salt() {
-        return dataProtectionKey.split(":::")[0];
-    }
-
-    private String cryptPassword() {
-        return dataProtectionKey.split(":::")[1];
-    }
 
 }
