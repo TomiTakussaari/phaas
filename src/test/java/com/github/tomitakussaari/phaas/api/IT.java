@@ -46,7 +46,7 @@ public abstract class IT {
 
     @After
     public void clearDb() {
-        apiUsersService.deleteUser(USER_NAME);
+        apiUsersService.findAll().forEach(user -> apiUsersService.deleteUser(user.getUsername()));
     }
 
     private static class HttpBasicAuthFilter implements ClientRequestFilter {

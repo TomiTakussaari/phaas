@@ -13,17 +13,17 @@ public class PasswordVerifier {
 
     private final PasswordHasher passwordReHasher = new PasswordHasher();
 
-    public PasswordVerifyResult verify(PasswordVerifyRequest request, ProtectionScheme schemeForRequest, ProtectionScheme activeSchemeForUser, String userPassword) {
-        TextEncryptor decryptor = Encryptors.text(schemeForRequest.decryptDataProtectionKey(userPassword), request.encryptionSalt());
+    public PasswordVerifyResult verify(PasswordVerifyRequest request, ProtectionScheme schemeForRequest, ProtectionScheme activeSchemeForUser, String encryptionKey) {
+        TextEncryptor decryptor = Encryptors.text(encryptionKey, request.encryptionSalt());
         String hashedPassword = decryptor.decrypt(request.encryptedPasswordHash());
         boolean passwordValid = schemeForRequest.passwordEncoder().matches(request.getPasswordCandidate(), hashedPassword);
-        Optional<String> upgradedHash = getUpgradedHash(request, schemeForRequest, activeSchemeForUser, passwordValid, userPassword);
+        Optional<String> upgradedHash = getUpgradedHash(request, schemeForRequest, activeSchemeForUser, passwordValid, encryptionKey);
         return new PasswordVerifyResult(upgradedHash, passwordValid);
     }
 
-    private Optional<String> getUpgradedHash(PasswordVerifyRequest request, ProtectionScheme currentScheme, ProtectionScheme newScheme, boolean passwordValid, String userPassword) {
+    private Optional<String> getUpgradedHash(PasswordVerifyRequest request, ProtectionScheme currentScheme, ProtectionScheme newScheme, boolean passwordValid, String encryptionKey) {
         if(!currentScheme.equals(newScheme) && passwordValid) {
-            return Optional.of(passwordReHasher.hash(new PasswordHashRequest(request.getPasswordCandidate()), newScheme, userPassword).getHash());
+            return Optional.of(passwordReHasher.hash(new PasswordHashRequest(request.getPasswordCandidate()), newScheme, encryptionKey).getHash());
         }
         return Optional.empty();
     }

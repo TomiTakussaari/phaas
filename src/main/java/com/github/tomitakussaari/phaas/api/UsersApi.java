@@ -29,6 +29,7 @@ public class UsersApi {
 
 
     @ApiOperation(value = "Returns information about current user")
+    @Secured({ApiUsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/me")
     public PublicUser whoAmI(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         return toPublicUser(userDetails);

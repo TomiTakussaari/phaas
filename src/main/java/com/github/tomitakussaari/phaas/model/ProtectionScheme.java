@@ -28,7 +28,7 @@ public class ProtectionScheme {
         return new PublicProtectionScheme(id, algorithm);
     }
 
-    public String decryptDataProtectionKey(String userPassword) {
+    public String decryptDataProtectionKey(CharSequence userPassword) {
         return Encryptors.text(userPassword, salt()).decrypt(cryptPassword());
     }
 

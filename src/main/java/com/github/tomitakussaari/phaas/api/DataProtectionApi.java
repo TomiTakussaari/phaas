@@ -4,6 +4,7 @@ package com.github.tomitakussaari.phaas.api;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import io.swagger.annotations.ApiOperation;
 import lombok.Data;
+import lombok.Getter;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,7 +33,7 @@ public class DataProtectionApi {
     @RequestMapping(method = RequestMethod.PUT, path = "/hmac/verify")
     public ResponseEntity<Void> verifyHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody HmacVerificationRequest request) {
         String realHmac = HmacUtils.hmacSha512Hex(userDetails.currentDataEncryptionKey(), request.getMessage());
-        if(equalsNoEarlyReturn(realHmac, request.getHmacCandidate())) {
+        if (equalsNoEarlyReturn(realHmac, request.getHmacCandidate())) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.unprocessableEntity().build();
@@ -43,16 +44,37 @@ public class DataProtectionApi {
     public String encrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToEncode) {
         String salt = KeyGenerators.string().generateKey();
         TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), salt);
-        return salt + ":::" + encryptor.encrypt(messageToEncode);
+        return new EncryptedMessage(salt, encryptor.encrypt(messageToEncode)).getMessageWithSalt();
     }
 
     @ApiOperation(value = "Decrypts given data using currently active encryption key")
     @RequestMapping(method = RequestMethod.PUT, path = "/decrypt", produces = "text/plain")
     public String decrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToDecode) {
-        String salt = messageToDecode.split(":::")[0];
-        String encodedMessage = messageToDecode.split(":::")[1];
-        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), salt);
-        return encryptor.decrypt(encodedMessage);
+        EncryptedMessage encryptedMessage = new EncryptedMessage(messageToDecode);
+        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), encryptedMessage.getSalt());
+        return encryptor.decrypt(encryptedMessage.getEncryptedMessage());
+    }
+
+    static class EncryptedMessage {
+        private static final String SEPARATOR = ":::";
+        @Getter
+        private final String messageWithSalt;
+
+        EncryptedMessage(String salt, String encryptedMessage) {
+            this.messageWithSalt = salt + ":::" + encryptedMessage;
+        }
+
+        EncryptedMessage(String encryptedMessageWithSalt) {
+            this.messageWithSalt = encryptedMessageWithSalt;
+        }
+
+        String getSalt() {
+            return messageWithSalt.split(SEPARATOR)[0];
+        }
+
+        String getEncryptedMessage() {
+            return messageWithSalt.split(SEPARATOR)[1];
+        }
     }
 
     @Data
@@ -61,7 +83,6 @@ public class DataProtectionApi {
         private final String hmacCandidate;
 
     }
-
 
 
 }

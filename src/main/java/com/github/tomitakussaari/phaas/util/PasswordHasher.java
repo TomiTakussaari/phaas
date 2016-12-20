@@ -9,9 +9,9 @@ import org.springframework.security.crypto.keygen.KeyGenerators;
 
 public class PasswordHasher {
 
-    public HashedPassword hash(PasswordHashRequest request, ProtectionScheme protectionScheme, String userPassword) {
+    public HashedPassword hash(PasswordHashRequest request, ProtectionScheme protectionScheme, String encryptionKey) {
         String salt = KeyGenerators.string().generateKey();
-        TextEncryptor encryptor = Encryptors.text(protectionScheme.decryptDataProtectionKey(userPassword), salt);
+        TextEncryptor encryptor = Encryptors.text(encryptionKey, salt);
         String hashedPassword = protectionScheme.passwordEncoder().encode(request.getRawPassword());
         return HashedPassword.from(protectionScheme.getId(), salt, encryptor.encrypt(hashedPassword));
     }

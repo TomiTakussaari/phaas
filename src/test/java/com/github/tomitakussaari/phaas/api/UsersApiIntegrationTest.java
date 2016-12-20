@@ -1,6 +1,5 @@
 package com.github.tomitakussaari.phaas.api;
 
-import com.github.tomitakussaari.phaas.user.ApiUsersService;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
@@ -14,9 +13,7 @@ import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.json;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class UsersApiIntegrationTest extends IT {
 
@@ -77,13 +74,5 @@ public class UsersApiIntegrationTest extends IT {
         Response accessDenied = unAuthenticatedWebTarget().path("/users").request().post(json(of("userName", "user4", "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", singletonList(USER))));
         assertEquals(401, accessDenied.getStatus());
         assertEquals("No access", accessDenied.readEntity(Map.class).get("message"));
-    }
-
-
-    @After
-    public void clearUsers() {
-        apiUsersService.deleteUser("user2");
-        apiUsersService.deleteUser("user3");
-        apiUsersService.deleteUser("user4");
     }
 }
