@@ -3,6 +3,8 @@ package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.Data;
 import lombok.Getter;
 import org.apache.commons.codec.digest.HmacUtils;
@@ -23,13 +25,17 @@ import static com.github.tomitakussaari.phaas.util.StringHelper.equalsNoEarlyRet
 @RequestMapping("/data-protection")
 public class DataProtectionApi {
 
-    @ApiOperation(value = "Calculates HMAC for given message")
-    @RequestMapping(method = RequestMethod.PUT, path = "/hmac", produces = "text/plain")
+    @ApiOperation(value = "Calculates HMAC for given message", consumes = "text/plain")
+    @RequestMapping(method = RequestMethod.PUT, path = "/hmac")
     public String calculateHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String message) {
         return HmacUtils.hmacSha512Hex(userDetails.currentDataEncryptionKey(), message);
     }
 
     @ApiOperation(value = "Verifies that given HMAC is valid for message")
+    @ApiResponses({
+            @ApiResponse(code = 204, message = "Hmac was valid for given message"),
+            @ApiResponse(code = 422, message = "Hmac was not valid for given message")
+    })
     @RequestMapping(method = RequestMethod.PUT, path = "/hmac/verify")
     public ResponseEntity<Void> verifyHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody HmacVerificationRequest request) {
         String realHmac = HmacUtils.hmacSha512Hex(userDetails.currentDataEncryptionKey(), request.getMessage());
@@ -39,16 +45,16 @@ public class DataProtectionApi {
         return ResponseEntity.unprocessableEntity().build();
     }
 
-    @ApiOperation(value = "Encrypts given data using currently active encryption key")
-    @RequestMapping(method = RequestMethod.PUT, path = "/encrypt", produces = "text/plain")
+    @ApiOperation(value = "Encrypts given data using currently active encryption key", consumes = "text/plain")
+    @RequestMapping(method = RequestMethod.PUT, path = "/encrypt")
     public String encrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToEncode) {
         String salt = KeyGenerators.string().generateKey();
         TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), salt);
         return new EncryptedMessage(salt, encryptor.encrypt(messageToEncode)).getMessageWithSalt();
     }
 
-    @ApiOperation(value = "Decrypts given data using currently active encryption key")
-    @RequestMapping(method = RequestMethod.PUT, path = "/decrypt", produces = "text/plain")
+    @ApiOperation(value = "Decrypts given data using currently active encryption key", consumes = "text/plain")
+    @RequestMapping(method = RequestMethod.PUT, path = "/decrypt")
     public String decrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToDecode) {
         EncryptedMessage encryptedMessage = new EncryptedMessage(messageToDecode);
         TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), encryptedMessage.getSalt());

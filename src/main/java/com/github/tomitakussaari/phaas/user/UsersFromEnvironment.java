@@ -3,12 +3,14 @@ package com.github.tomitakussaari.phaas.user;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -17,8 +19,13 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 
+import static com.github.tomitakussaari.phaas.model.ProtectionScheme.PasswordEncodingAlgorithm.*;
+import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
+import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
+
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Component
+@Slf4j
 class UsersFromEnvironment {
     private final ApiUsersService apiUsersService;
     private final Environment environment;
@@ -28,6 +35,10 @@ class UsersFromEnvironment {
         String usersConf = environment.getProperty("db.users.content");
         if(usersConf != null) {
             UserData.deSerialize(usersConf).forEach(userData -> apiUsersService.create(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
+            log.info("Initialized user database from environment configuration");
+        } else if(!apiUsersService.hasUsers()) {
+            String password = apiUsersService.createUser("admin", DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ADMIN, USER));
+            log.info("*** Created 'admin' user with password '{}' ***", password);
         }
     }
 

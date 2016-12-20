@@ -73,6 +73,6 @@ public class UsersApiIntegrationTest extends IT {
     public void unAuthenticatedCannotCreateNewUsers() {
         Response accessDenied = unAuthenticatedWebTarget().path("/users").request().post(json(of("userName", "user4", "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", singletonList(USER))));
         assertEquals(401, accessDenied.getStatus());
-        assertEquals("No access", accessDenied.readEntity(Map.class).get("message"));
+        assertEquals("Full authentication is required to access this resource", accessDenied.readEntity(Map.class).get("message"));
     }
 }

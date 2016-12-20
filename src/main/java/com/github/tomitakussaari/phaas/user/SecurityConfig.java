@@ -18,7 +18,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/", "/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
+    private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
     @Autowired
     private ApiUsersService apiUsersService;
@@ -40,6 +40,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private boolean requiresAuthentication(HttpServletRequest httpServletRequest) {
-        return UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
+        return !httpServletRequest.getServletPath().equals("/") && UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
     }
 }

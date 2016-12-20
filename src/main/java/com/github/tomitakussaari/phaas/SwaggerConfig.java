@@ -20,7 +20,7 @@ import static springfox.documentation.builders.PathSelectors.regex;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    private static final String DOCUMENTED_ENDPOINTS = "/passwords.*|/users.*|/encrypt.*";
+    private static final String DOCUMENTED_ENDPOINTS = "/passwords.*|/users.*|/data-protection.*";
 
     @Bean
     public Docket phaasDocumentation() {

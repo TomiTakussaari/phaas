@@ -53,6 +53,10 @@ public class ApiUsersService implements UserDetailsService {
         return details;
     }
 
+    public boolean hasUsers() {
+        return phaasUserRepository.count() > 0L;
+    }
+
     public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles) {
         return createUser(userName, algorithm, roles, generatePassword());
     }
@@ -109,7 +113,7 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     private String generatePassword() {
-        return RandomStringUtils.random(30);
+        return RandomStringUtils.randomAscii(30);
     }
 
     @RequiredArgsConstructor

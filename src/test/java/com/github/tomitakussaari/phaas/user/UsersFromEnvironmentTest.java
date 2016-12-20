@@ -9,9 +9,15 @@ import org.springframework.core.env.Environment;
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
+import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
+import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 public class UsersFromEnvironmentTest {
+    private final Environment environment = Mockito.mock(Environment.class);
+    private final ApiUsersService apiUsersService = Mockito.mock(ApiUsersService.class);
 
     private final String serializedFrom = "[{\"userDTO\":{\"id\":3,\"userName\":\"username\",\"passwordHash\":\"$2a$10$AmFDaMGXu3LHgCivgoli0Op6RmTIWn1xWjF0qy/e5UjvzxGmcGRm6\",\"roles\":\"ROLE_ADMIN, ROLE_USER\"},\"userConfigurationDTOs\":[{\"id\":1,\"user\":\"username\",\"dataProtectionKey\":\"old-data-protection-key\",\"active\":false,\"algorithm\":\"DEFAULT_SHA256ANDBCRYPT\"},{\"id\":2,\"user\":\"username\",\"dataProtectionKey\":\"new-data-protection-key\",\"active\":true,\"algorithm\":\"DEFAULT_SHA256ANDBCRYPT\"}]}]";
     private final UserDTO userDTO = new UserDTO(3, "username", "$2a$10$AmFDaMGXu3LHgCivgoli0Op6RmTIWn1xWjF0qy/e5UjvzxGmcGRm6", "ROLE_ADMIN, ROLE_USER");
@@ -21,13 +27,11 @@ public class UsersFromEnvironmentTest {
 
     @Test
     public void createsUsersBasedOnEnvironmentConfig() {
-        Environment environment = Mockito.mock(Environment.class);
-        ApiUsersService apiUsersService = Mockito.mock(ApiUsersService.class);
-        Mockito.when(environment.getProperty("db.users.content")).thenReturn(serializedFrom);
+        when(environment.getProperty("db.users.content")).thenReturn(serializedFrom);
         UsersFromEnvironment usersFromEnvironment = new UsersFromEnvironment(apiUsersService, environment);
         usersFromEnvironment.initializeDatabase();
 
-        Mockito.verify(apiUsersService).create(userDTO, configurationDTO1, configurationDTO2);
+        verify(apiUsersService).create(userDTO, configurationDTO1, configurationDTO2);
     }
 
     @Test
@@ -37,5 +41,23 @@ public class UsersFromEnvironmentTest {
 
         assertEquals(serializedFrom, serializedData);
         assertEquals(dataFromDTOs, dataFromString);
+    }
+
+    @Test
+    public void createsAdminUserIfUserDatabaseIsEmptyAndEnvironmentDoesNotDefineUsers() {
+        when(apiUsersService.hasUsers()).thenReturn(false);
+        when(apiUsersService.createUser("admin", ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, asList(ADMIN, USER))).thenReturn("password");
+        UsersFromEnvironment usersFromEnvironment = new UsersFromEnvironment(apiUsersService, environment);
+        usersFromEnvironment.initializeDatabase();
+        verify(apiUsersService).createUser("admin", ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, asList(ADMIN, USER));
+    }
+
+    @Test
+    public void doesNotCreateAdminUserIfUserDatabaseIsNotEmpty() {
+        when(apiUsersService.hasUsers()).thenReturn(true);
+        UsersFromEnvironment usersFromEnvironment = new UsersFromEnvironment(apiUsersService, environment);
+        usersFromEnvironment.initializeDatabase();
+        verify(apiUsersService).hasUsers();
+        verifyNoMoreInteractions(apiUsersService);
     }
 }
