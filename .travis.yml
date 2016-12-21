@@ -19,6 +19,7 @@ addons:
     project:
       name: "TomiTakussaari/phaas"
       description: "Build submitted via Travis CI"
+    notification_email: tomi.takussaari@gmail.com
     build_command_prepend: "mvn clean"
     build_command:   "mvn -DskipTests=true install"
     branch_pattern: master
