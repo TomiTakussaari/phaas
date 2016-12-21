@@ -1,6 +1,7 @@
 package com.github.tomitakussaari.phaas.user;
 
-import com.github.tomitakussaari.phaas.model.ProtectionScheme;
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme.CryptoData;
 import com.github.tomitakussaari.phaas.model.ProtectionSchemeNotFoundException;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
@@ -22,19 +23,19 @@ public class PhaasUserDetails implements UserDetails {
     private final UserDTO userDTO;
     private final List<UserConfigurationDTO> configurations;
 
-    public ProtectionScheme activeProtectionScheme() {
+    public DataProtectionScheme activeProtectionScheme() {
         return configurations.stream().filter(UserConfigurationDTO::isActive).findFirst()
                 .map(toProtectionScheme())
                 .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find active encryption key for user: " + getUsername()));
     }
 
-    public ProtectionScheme protectionScheme(int id) {
+    public DataProtectionScheme protectionScheme(int id) {
         return configurations.stream().filter(config -> config.getId().equals(id)).findFirst()
                 .map(toProtectionScheme())
                 .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find encryption key by id: " + id));
     }
 
-    public List<ProtectionScheme> protectionSchemes() {
+    public List<DataProtectionScheme> protectionSchemes() {
         return configurations.stream().map(toProtectionScheme()).collect(toList());
     }
 
@@ -42,16 +43,16 @@ public class PhaasUserDetails implements UserDetails {
         return (CharSequence) SecurityContextHolder.getContext().getAuthentication().getCredentials();
     }
 
-    public String currentDataEncryptionKey() {
-        return activeProtectionScheme().decryptDataProtectionKey(findCurrentUserPassword());
+    public CryptoData currentDataProtectionScheme() {
+        return activeProtectionScheme().decryptedProtectionScheme(findCurrentUserPassword());
     }
 
-    public String dataEncryptionKeyForScheme(int schemeId) {
-        return protectionScheme(schemeId).decryptDataProtectionKey(findCurrentUserPassword());
+    public CryptoData dataProtectionSchemeForId(int schemeId) {
+        return protectionScheme(schemeId).decryptedProtectionScheme(findCurrentUserPassword());
     }
 
-    private Function<UserConfigurationDTO, ProtectionScheme> toProtectionScheme() {
-        return activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.getDataProtectionKey());
+    private Function<UserConfigurationDTO, DataProtectionScheme> toProtectionScheme() {
+        return activeConfig -> new DataProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.getDataProtectionKey());
     }
 
     @Override

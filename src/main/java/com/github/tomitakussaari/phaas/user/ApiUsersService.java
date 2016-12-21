@@ -1,6 +1,6 @@
 package com.github.tomitakussaari.phaas.user;
 
-import com.github.tomitakussaari.phaas.model.ProtectionScheme.PasswordEncodingAlgorithm;
+import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.dao.PhaasUserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.PhaasUserRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;

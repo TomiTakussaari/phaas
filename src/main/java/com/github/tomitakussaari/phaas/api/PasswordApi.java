@@ -31,14 +31,14 @@ public class PasswordApi {
     @Secured({ApiUsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
     public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
-        return passwordHasher.hash(request, userDetails.activeProtectionScheme(), userDetails.currentDataEncryptionKey());
+        return passwordHasher.hash(request, userDetails.currentDataProtectionScheme());
     }
 
     @ApiOperation(value = "Verifies given password against given hash")
     @Secured({ApiUsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
     public PasswordVerifyResult verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
-        return passwordVerifier.verify(request, userDetails.protectionScheme(request.schemeId()), userDetails.activeProtectionScheme(), userDetails.findCurrentUserPassword());
+        return passwordVerifier.verify(request, userDetails.dataProtectionSchemeForId(request.schemeId()), userDetails.currentDataProtectionScheme());
     }
 
 

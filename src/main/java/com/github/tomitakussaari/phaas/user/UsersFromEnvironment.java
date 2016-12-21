@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.github.tomitakussaari.phaas.model.ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT;
+import static com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
 

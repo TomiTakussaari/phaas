@@ -46,8 +46,8 @@ public class ExceptionAdvisor {
 
     @ExceptionHandler(ProtectionSchemeNotFoundException.class)
     public ResponseEntity<ErrorMessage> accessDenied(ProtectionSchemeNotFoundException e) {
-        log.warn("ProtectionScheme was not found: " + e.getMessage(), e);
-        return responseEntity("ProtectionScheme was not found", e, HttpStatus.BAD_REQUEST);
+        log.warn("DataProtectionScheme was not found: " + e.getMessage(), e);
+        return responseEntity("DataProtectionScheme was not found", e, HttpStatus.BAD_REQUEST);
     }
 
     private ResponseEntity<ErrorMessage> responseEntity(String message, Exception e, HttpStatus status) {

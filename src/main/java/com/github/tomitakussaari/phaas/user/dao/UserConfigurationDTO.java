@@ -1,11 +1,10 @@
 package com.github.tomitakussaari.phaas.user.dao;
 
-import com.github.tomitakussaari.phaas.model.ProtectionScheme;
+import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
-import org.springframework.security.crypto.encrypt.Encryptors;
 
 import javax.persistence.*;
 
@@ -23,7 +22,7 @@ public class UserConfigurationDTO {
     private String user;
     private String dataProtectionKey;
     private boolean active;
-    private ProtectionScheme.PasswordEncodingAlgorithm algorithm;
+    private PasswordEncodingAlgorithm algorithm;
 
 
 }

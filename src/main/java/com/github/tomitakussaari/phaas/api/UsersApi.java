@@ -1,7 +1,8 @@
 package com.github.tomitakussaari.phaas.api;
 
-import com.github.tomitakussaari.phaas.model.ProtectionScheme;
-import com.github.tomitakussaari.phaas.model.ProtectionScheme.PasswordEncodingAlgorithm;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
+import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.ApiUsersService;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import io.swagger.annotations.ApiOperation;
@@ -67,7 +68,7 @@ public class UsersApi {
         return PublicUser.builder()
                 .userName(userDetails.getUsername())
                 .currentProtectionScheme(userDetails.activeProtectionScheme().toPublicScheme())
-                .supportedProtectionSchemes(userDetails.protectionSchemes().stream().map(ProtectionScheme::toPublicScheme).collect(toList()))
+                .supportedProtectionSchemes(userDetails.protectionSchemes().stream().map(DataProtectionScheme::toPublicScheme).collect(toList()))
                 .roles(userDetails.getAuthorities().stream().map(authority -> ApiUsersService.ROLE.fromDbValue(authority.getAuthority())).collect(toList()))
                 .build();
     }
@@ -83,11 +84,11 @@ public class UsersApi {
     static class PublicUser {
         private final String userName;
         private final List<ApiUsersService.ROLE> roles;
-        private final ProtectionScheme.PublicProtectionScheme currentProtectionScheme;
-        private final List<ProtectionScheme.PublicProtectionScheme> supportedProtectionSchemes;
+        private final DataProtectionScheme.PublicProtectionScheme currentProtectionScheme;
+        private final List<DataProtectionScheme.PublicProtectionScheme> supportedProtectionSchemes;
     }
 
-    @RequiredArgsConstructor
+    @RequiredArgsConstructor(onConstructor = @__(@JsonCreator))
     @Getter
     public class ProtectionSchemeRequest {
         @NonNull
@@ -95,7 +96,7 @@ public class UsersApi {
         private final boolean removeOldSchemes;
     }
 
-    @RequiredArgsConstructor
+    @RequiredArgsConstructor(onConstructor = @__(@JsonCreator))
     @Getter
     static class CreateUserRequest {
         @NonNull

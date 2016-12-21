@@ -1,7 +1,7 @@
 package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.Application;
-import com.github.tomitakussaari.phaas.model.ProtectionScheme;
+import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.ApiUsersService;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.After;
@@ -41,7 +41,7 @@ public abstract class IT {
 
     @Before
     public void initialize() {
-        apiUsersService.createUser(USER_NAME, ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD);
+        apiUsersService.createUser(USER_NAME, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD);
     }
 
     @After

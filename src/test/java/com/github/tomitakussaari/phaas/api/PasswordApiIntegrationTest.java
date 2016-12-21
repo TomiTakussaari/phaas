@@ -31,7 +31,7 @@ public class PasswordApiIntegrationTest extends IT {
 
         Response response = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPassword.get("hash"))));
         assertEquals(400, response.getStatus());
-        assertEquals("ProtectionScheme was not found", response.readEntity(Map.class).get("message"));
+        assertEquals("DataProtectionScheme was not found", response.readEntity(Map.class).get("message"));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class PasswordApiIntegrationTest extends IT {
 
         Response response = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPasswordWithOldScheme.get("hash"))));
         assertEquals(400, response.getStatus());
-        assertEquals("ProtectionScheme was not found", response.readEntity(Map.class).get("message"));
+        assertEquals("DataProtectionScheme was not found", response.readEntity(Map.class).get("message"));
     }
 
     @Test

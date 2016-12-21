@@ -1,10 +1,10 @@
 package com.github.tomitakussaari.phaas.api;
 
 
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.EncryptedAndSignedMessage;
 import com.github.tomitakussaari.phaas.model.EncryptedMessage;
 import com.github.tomitakussaari.phaas.model.HmacVerificationRequest;
-import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -30,8 +30,8 @@ public class DataProtectionApi {
     @ApiOperation(value = "Calculates HMAC for given message", consumes = "text/plain")
     @RequestMapping(method = RequestMethod.PUT, path = "/hmac")
     public String calculateHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String message) {
-        ProtectionScheme protectionScheme = userDetails.activeProtectionScheme();
-        return protectionScheme.getId() + HASH_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.dataEncryptionKeyForScheme(protectionScheme.getId()), message);
+        DataProtectionScheme dataProtectionScheme = userDetails.activeProtectionScheme();
+        return dataProtectionScheme.getId() + HASH_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.dataProtectionSchemeForId(dataProtectionScheme.getId()).dataProtectionKey(), message);
     }
 
     @ApiOperation(value = "Verifies that given HMAC is valid for message")
@@ -83,17 +83,17 @@ public class DataProtectionApi {
 
     private EncryptedMessage encryptedMessage(PhaasUserDetails userDetails, String messageToEncode) {
         String salt = KeyGenerators.string().generateKey();
-        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), salt);
+        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataProtectionScheme().dataProtectionKey(), salt);
         return new EncryptedMessage(userDetails.activeProtectionScheme().getId(), salt, encryptor.encrypt(messageToEncode));
     }
 
     private String decryptedMessage(PhaasUserDetails userDetails, EncryptedMessage encryptedMessage) {
-        TextEncryptor encryptor = Encryptors.delux(userDetails.dataEncryptionKeyForScheme(encryptedMessage.schemeId()), encryptedMessage.getSalt());
+        TextEncryptor encryptor = Encryptors.delux(userDetails.dataProtectionSchemeForId(encryptedMessage.schemeId()).dataProtectionKey(), encryptedMessage.getSalt());
         return encryptor.decrypt(encryptedMessage.getEncryptedMessage());
     }
 
     private boolean isValidMacFor(String message, String hmacCandidate, PhaasUserDetails userDetails, int schemeId) {
-        String realHmac = HmacUtils.hmacSha512Hex(userDetails.dataEncryptionKeyForScheme(schemeId), message);
+        String realHmac = HmacUtils.hmacSha512Hex(userDetails.dataProtectionSchemeForId(schemeId).dataProtectionKey(), message);
         return equalsNoEarlyReturn(realHmac, hmacCandidate);
     }
 
