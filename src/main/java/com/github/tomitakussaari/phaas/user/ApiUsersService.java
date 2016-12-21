@@ -39,7 +39,7 @@ public class ApiUsersService implements UserDetailsService {
     private final PhaasUserRepository phaasUserRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) {
         return phaasUserRepository.findByUserName(username)
                 .map(userDTO -> new PhaasUserDetails(userDTO, phaasUserConfigurationRepository.findByUser(username)))
                 .orElseThrow(() -> new UsernameNotFoundException("Not found: "+username));

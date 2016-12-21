@@ -26,15 +26,6 @@ public class DataProtectionScheme {
         return new CryptoData(this, userPassword);
     }
 
-    private String salt() {
-        return protectedEncryptionKey.split(":::")[0];
-    }
-
-    private String cryptPassword() {
-        return protectedEncryptionKey.split(":::")[1];
-    }
-
-
     @RequiredArgsConstructor
     @EqualsAndHashCode
     public static class CryptoData {
@@ -46,7 +37,14 @@ public class DataProtectionScheme {
         }
 
         public String dataProtectionKey() {
-            return Encryptors.text(userPassword, scheme.salt()).decrypt(scheme.cryptPassword());
+            return Encryptors.text(userPassword, salt()).decrypt(cryptPassword());
+        }
+        private String salt() {
+            return scheme.protectedEncryptionKey.split(":::")[0];
+        }
+
+        private String cryptPassword() {
+            return scheme.protectedEncryptionKey.split(":::")[1];
         }
     }
 

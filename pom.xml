@@ -7,6 +7,8 @@
     <artifactId>phaas</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>Phaas</name>
+    <description>RESTish API for protecting and verifying passwords and other data</description>
+    <url>https://github.com/TomiTakussaari/phaas</url>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
