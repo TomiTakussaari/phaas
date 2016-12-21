@@ -38,7 +38,7 @@ public class PasswordApi {
     @Secured({ApiUsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
     public PasswordVerifyResult verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
-        return passwordVerifier.verify(request, userDetails.protectionScheme(request.schemeId()), userDetails.activeProtectionScheme(), userDetails.currentDataEncryptionKey());
+        return passwordVerifier.verify(request, userDetails.protectionScheme(request.schemeId()), userDetails.activeProtectionScheme(), userDetails.findCurrentUserPassword());
     }
 
 

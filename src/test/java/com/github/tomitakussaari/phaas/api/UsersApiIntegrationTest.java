@@ -4,6 +4,7 @@ import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -21,6 +22,15 @@ public class UsersApiIntegrationTest extends IT {
     public void findsOutCurrentUser() {
         Map currentUser = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
         validateUser(currentUser);
+    }
+
+    @Test
+    public void updatesProtectionScheme() {
+        Map currentUserWithOldScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
+        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT")));
+        assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
+        Map currentUserWithNewScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
+        assertNotEquals(currentUserWithOldScheme, currentUserWithNewScheme);
     }
 
     private void validateUser(Map currentUser) {

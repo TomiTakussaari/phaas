@@ -2,6 +2,8 @@ package com.github.tomitakussaari.phaas.api;
 
 import org.junit.Test;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
@@ -9,9 +11,7 @@ import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.json;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class PasswordApiIntegrationTest extends IT {
 
@@ -32,6 +32,29 @@ public class PasswordApiIntegrationTest extends IT {
         Response response = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPassword.get("hash"))));
         assertEquals(400, response.getStatus());
         assertEquals("ProtectionScheme was not found", response.readEntity(Map.class).get("message"));
+    }
+
+    @Test
+    public void passwordWithOldSchemeCanBeVerifiedAfterUpdatingScheme() {
+        Map hashedPasswordWithOldScheme = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
+        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT")));
+        assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
+
+        Map verifyResponse = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPasswordWithOldScheme.get("hash"))), Map.class);
+        assertTrue((boolean) verifyResponse.get("valid"));
+    }
+
+    @Test
+    public void passwordVerificationReturnsUpgradePasswordHashAfterUpdatingScheme() {
+        Map hashedPasswordWithOldScheme = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
+        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT")));
+        assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
+
+        Map verifyResponseWithUpgradedHash = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPasswordWithOldScheme.get("hash"))), Map.class);
+        assertNotNull(verifyResponseWithUpgradedHash.get("upgradedHash"));
+        Map verifyResponse = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", verifyResponseWithUpgradedHash.get("upgradedHash"))), Map.class);
+        assertTrue((boolean) verifyResponse.get("valid"));
+        assertNull(verifyResponse.get("upgradedHash"));
     }
 
     @Test

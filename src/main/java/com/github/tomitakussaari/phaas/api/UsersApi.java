@@ -59,10 +59,10 @@ public class UsersApi {
     }
 
     @ApiOperation(value = "Creates new protectionscheme and makes it active")
-    @RequestMapping(method = RequestMethod.POST, produces = "application/json", path = "/new-algorithm")
+    @RequestMapping(method = RequestMethod.POST, path = "/me/scheme", consumes = "application/json")
     public void newProtectionScheme(@RequestBody ProtectionSchemeRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         rejectIfUserDatabaseIsImmutable();
-        apiUsersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm());
+        apiUsersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm(), userDetails.findCurrentUserPassword());
     }
 
     private PublicUser toPublicUser(PhaasUserDetails userDetails) {

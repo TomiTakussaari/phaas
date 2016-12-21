@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import static com.github.tomitakussaari.phaas.util.StringHelper.equalsNoEarlyReturn;
-
 @RestController
 @RequestMapping("/data-protection")
 public class DataProtectionApi {
@@ -90,5 +88,22 @@ public class DataProtectionApi {
 
     }
 
+    /**
+     * From BCrypt.java
+     */
+    private static boolean equalsNoEarlyReturn(String a, String b) {
+        char[] caa = a.toCharArray();
+        char[] cab = b.toCharArray();
+        if(caa.length != cab.length) {
+            return false;
+        } else {
+            byte ret = 0;
 
+            for(int i = 0; i < caa.length; ++i) {
+                ret = (byte)(ret | caa[i] ^ cab[i]);
+            }
+
+            return ret == 0;
+        }
+    }
 }

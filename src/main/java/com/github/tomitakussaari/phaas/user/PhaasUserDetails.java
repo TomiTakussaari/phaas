@@ -38,8 +38,8 @@ public class PhaasUserDetails implements UserDetails {
         return configurations.stream().map(toProtectionScheme()).collect(toList());
     }
 
-    private CharSequence findCurrentUserPassword() {
-        return SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
+    public CharSequence findCurrentUserPassword() {
+        return (CharSequence) SecurityContextHolder.getContext().getAuthentication().getCredentials();
     }
 
     public String currentDataEncryptionKey() {

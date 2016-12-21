@@ -53,7 +53,7 @@ public class ApiUsersService implements UserDetailsService {
         return details;
     }
 
-    public boolean hasUsers() {
+    boolean hasUsers() {
         return phaasUserRepository.count() > 0L;
     }
 
@@ -80,13 +80,13 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     @Transactional
-    public void newProtectionScheme(String userName, PasswordEncodingAlgorithm algorithm) {
+    public void newProtectionScheme(String userName, PasswordEncodingAlgorithm algorithm, CharSequence userPassword) {
         Optional<UserDTO> userMaybe = phaasUserRepository.findByUserName(userName);
         userMaybe.ifPresent(userDTO -> {
             phaasUserConfigurationRepository.findByUser(userName).stream()
                     .map(userConfigurationDTO -> userConfigurationDTO.setActive(false))
                     .forEach(phaasUserConfigurationRepository::save);
-            phaasUserConfigurationRepository.save(getUserConfigurationDTO(algorithm, generatePassword(), userDTO));
+            phaasUserConfigurationRepository.save(getUserConfigurationDTO(algorithm, userPassword, userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
     }
@@ -98,7 +98,7 @@ public class ApiUsersService implements UserDetailsService {
         log.info("Created user: {}", savedUser.getUserName());
     }
 
-    private String createEncryptionKey(String password) {
+    private String createEncryptionKey(CharSequence password) {
         String salt = KeyGenerators.string().generateKey();
         String encryptionKey = RandomStringUtils.random(30);
         TextEncryptor encryptor = Encryptors.text(password, salt);
@@ -106,7 +106,7 @@ public class ApiUsersService implements UserDetailsService {
         return salt + ":::" + encryptedKey;
     }
 
-    private UserConfigurationDTO getUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, String password, UserDTO userDTO) {
+    private UserConfigurationDTO getUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, CharSequence password, UserDTO userDTO) {
         return new UserConfigurationDTO()
                 .setActive(true).setAlgorithm(algorithm).setUser(userDTO.getUserName())
                 .setDataProtectionKey(createEncryptionKey(password));
