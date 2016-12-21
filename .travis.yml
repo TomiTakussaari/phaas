@@ -25,5 +25,6 @@ addons:
       description: "Build submitted via Travis CI"
     build_command_prepend: "mvn clean"
     build_command:   "mvn -DskipTests=true compile"
-    branch_pattern: master
-
+    branches:
+      only:
+      - master
