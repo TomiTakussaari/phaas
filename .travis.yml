@@ -14,6 +14,7 @@ jdk:
 
 after_success:
   - mvn jacoco:report coveralls:report
+  - mvn sonar:sonar
 
 addons:
   coverity_scan:
