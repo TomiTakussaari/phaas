@@ -15,4 +15,14 @@ public class PasswordVerifyRequestTest {
         assertEquals("wannaBeSalt", request.encryptionSalt());
         assertEquals(12, request.schemeId());
     }
+
+    @Test(expected = NullPointerException.class)
+    public void newInstanceCreationRequiresHash() {
+        new PasswordVerifyRequest("password", null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void newInstanceCreationRequiresPassword() {
+        new PasswordVerifyRequest(null, "hash");
+    }
 }

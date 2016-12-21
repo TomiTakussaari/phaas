@@ -3,7 +3,6 @@ package com.github.tomitakussaari.phaas.user;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
-import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import lombok.EqualsAndHashCode;
@@ -17,9 +16,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
-import static com.github.tomitakussaari.phaas.model.ProtectionScheme.PasswordEncodingAlgorithm.*;
+import static com.github.tomitakussaari.phaas.model.ProtectionScheme.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
 
@@ -33,10 +33,10 @@ class UsersFromEnvironment {
     @PostConstruct
     void initializeDatabase() {
         String usersConf = environment.getProperty("db.users.content");
-        if(usersConf != null) {
+        if (usersConf != null) {
             UserData.deSerialize(usersConf).forEach(userData -> apiUsersService.create(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
             log.info("Initialized user database from environment configuration");
-        } else if(!apiUsersService.hasUsers()) {
+        } else if (!apiUsersService.hasUsers()) {
             String password = apiUsersService.createUser("admin", DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ADMIN, USER));
             log.info("*** Created 'admin' user with password '{}' ***", password);
         }
@@ -52,24 +52,30 @@ class UsersFromEnvironment {
         private UserDTO userDTO;
         private UserConfigurationDTO[] userConfigurationDTOs;
 
-        UserData(UserDTO userDTO, UserConfigurationDTO...configurationDTOS) {
+        UserData(UserDTO userDTO, UserConfigurationDTO... configurationDTOS) {
             this.userDTO = userDTO;
             this.userConfigurationDTOs = configurationDTOS;
         }
 
         static List<UserData> deSerialize(String input) {
+            return objectMapSafely(() -> objectMapper.readValue(input, collectionType));
+        }
+
+        static String serialize(List<UserData> input) {
+            return objectMapSafely(() -> objectMapper.writeValueAsString(input));
+        }
+
+        static <T> T objectMapSafely(ObjectMapperOperation<T> objectMapperOperation) {
             try {
-                return objectMapper.readValue(input, collectionType);
+                return objectMapperOperation.get();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
-        static String serialize(List<UserData> input) {
-            try {
-                return objectMapper.writeValueAsString(input);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+
+        @FunctionalInterface
+        public interface ObjectMapperOperation<T> {
+            T get() throws IOException;
         }
     }
 }

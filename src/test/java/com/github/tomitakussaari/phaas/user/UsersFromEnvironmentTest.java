@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.springframework.core.env.Environment;
 
+import java.io.IOException;
 import java.util.Collections;
 
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
@@ -59,5 +60,12 @@ public class UsersFromEnvironmentTest {
         usersFromEnvironment.initializeDatabase();
         verify(apiUsersService).hasUsers();
         verifyNoMoreInteractions(apiUsersService);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void userDataObjectMapSafelyThrowsRuntimeExceptionOnIOException() {
+        UsersFromEnvironment.UserData.objectMapSafely(() -> {
+            throw new IOException("expected");
+        });
     }
 }
