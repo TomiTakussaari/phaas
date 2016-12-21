@@ -6,7 +6,6 @@ import com.github.tomitakussaari.phaas.user.ApiUsersService;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import io.swagger.annotations.ApiOperation;
 import lombok.*;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.security.access.annotation.Secured;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -62,7 +60,7 @@ public class UsersApi {
     @RequestMapping(method = RequestMethod.POST, path = "/me/scheme", consumes = "application/json")
     public void newProtectionScheme(@RequestBody ProtectionSchemeRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         rejectIfUserDatabaseIsImmutable();
-        apiUsersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm(), userDetails.findCurrentUserPassword());
+        apiUsersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm(), userDetails.findCurrentUserPassword(), request.isRemoveOldSchemes());
     }
 
     private PublicUser toPublicUser(PhaasUserDetails userDetails) {
@@ -75,7 +73,7 @@ public class UsersApi {
     }
 
     private void rejectIfUserDatabaseIsImmutable() {
-        if(environment.getProperty("immutable.users.db", Boolean.class)) {
+        if (environment.getProperty("immutable.users.db", Boolean.class)) {
             throw new UnsupportedOperationException("");
         }
     }
@@ -94,6 +92,7 @@ public class UsersApi {
     public class ProtectionSchemeRequest {
         @NonNull
         private final PasswordEncodingAlgorithm algorithm;
+        private final boolean removeOldSchemes;
     }
 
     @RequiredArgsConstructor

@@ -80,15 +80,21 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     @Transactional
-    public void newProtectionScheme(String userName, PasswordEncodingAlgorithm algorithm, CharSequence userPassword) {
+    public void newProtectionScheme(String userName, PasswordEncodingAlgorithm algorithm, CharSequence userPassword, Boolean removeOldSchemes) {
         Optional<UserDTO> userMaybe = phaasUserRepository.findByUserName(userName);
         userMaybe.ifPresent(userDTO -> {
-            phaasUserConfigurationRepository.findByUser(userName).stream()
-                    .map(userConfigurationDTO -> userConfigurationDTO.setActive(false))
-                    .forEach(phaasUserConfigurationRepository::save);
+            phaasUserConfigurationRepository.findByUser(userName).forEach(config -> invalidateOrRemove(removeOldSchemes, config));
             phaasUserConfigurationRepository.save(getUserConfigurationDTO(algorithm, userPassword, userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
+    }
+
+    private void invalidateOrRemove(Boolean removeOldSchemes, UserConfigurationDTO config) {
+        if(removeOldSchemes)  {
+            phaasUserConfigurationRepository.delete(config);
+        } else {
+            phaasUserConfigurationRepository.save(config.setActive(false));
+        }
     }
 
     @Transactional

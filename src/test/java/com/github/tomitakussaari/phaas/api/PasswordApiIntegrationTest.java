@@ -45,6 +45,17 @@ public class PasswordApiIntegrationTest extends IT {
     }
 
     @Test
+    public void passwordWithOldSchemeCannotBeVerifiedAfterUpdatingSchemeWithInvalidateOldFlagTrue() {
+        Map hashedPasswordWithOldScheme = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
+        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT", "removeOldSchemes", "true")));
+        assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
+
+        Response response = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPasswordWithOldScheme.get("hash"))));
+        assertEquals(400, response.getStatus());
+        assertEquals("ProtectionScheme was not found", response.readEntity(Map.class).get("message"));
+    }
+
+    @Test
     public void passwordVerificationReturnsUpgradePasswordHashAfterUpdatingScheme() {
         Map hashedPasswordWithOldScheme = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
         Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT")));
