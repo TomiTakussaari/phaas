@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class UserDTO {
+public class UserDTO implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

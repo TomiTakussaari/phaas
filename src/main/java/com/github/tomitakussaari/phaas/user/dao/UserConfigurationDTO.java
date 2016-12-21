@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "user_configuration")
@@ -14,7 +15,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class UserConfigurationDTO {
+public class UserConfigurationDTO implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

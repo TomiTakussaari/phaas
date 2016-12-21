@@ -40,6 +40,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private boolean requiresAuthentication(HttpServletRequest httpServletRequest) {
-        return !httpServletRequest.getServletPath().equals("/") && UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
+        return !"/".equals(httpServletRequest.getServletPath()) && UNSECURE_ENDPOINTS.stream().noneMatch(endpoint -> httpServletRequest.getServletPath().startsWith(endpoint));
     }
 }

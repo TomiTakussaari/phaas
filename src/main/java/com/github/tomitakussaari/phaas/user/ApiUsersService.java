@@ -98,7 +98,7 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     @Transactional
-    void create(UserDTO userDTO, UserConfigurationDTO...configurationDTO) {
+    public void create(UserDTO userDTO, UserConfigurationDTO...configurationDTO) {
         UserDTO savedUser = phaasUserRepository.save(userDTO);
         Stream.of(configurationDTO).forEach(phaasUserConfigurationRepository::save);
         log.info("Created user: {}", savedUser.getUserName());

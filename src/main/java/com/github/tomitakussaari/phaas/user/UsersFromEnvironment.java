@@ -69,7 +69,7 @@ class UsersFromEnvironment {
             try {
                 return objectMapperOperation.get();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new UnsupportedOperationException("JSON serialization does not work ?", e);
             }
         }
 
