@@ -46,6 +46,10 @@ public class PhaasUserDetails implements UserDetails {
         return activeProtectionScheme().decryptDataProtectionKey(findCurrentUserPassword());
     }
 
+    public String dataEncryptionKeyForScheme(int schemeId) {
+        return protectionScheme(schemeId).decryptDataProtectionKey(findCurrentUserPassword());
+    }
+
     private Function<UserConfigurationDTO, ProtectionScheme> toProtectionScheme() {
         return activeConfig -> new ProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.getDataProtectionKey());
     }

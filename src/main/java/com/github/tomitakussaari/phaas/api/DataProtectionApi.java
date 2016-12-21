@@ -1,12 +1,14 @@
 package com.github.tomitakussaari.phaas.api;
 
 
+import com.github.tomitakussaari.phaas.model.EncryptedAndSignedMessage;
+import com.github.tomitakussaari.phaas.model.EncryptedMessage;
+import com.github.tomitakussaari.phaas.model.HmacVerificationRequest;
+import com.github.tomitakussaari.phaas.model.ProtectionScheme;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.Data;
-import lombok.Getter;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,10 +25,13 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequestMapping("/data-protection")
 public class DataProtectionApi {
 
+    public static final String HASH_VALUE_SEPARATOR = ":::";
+
     @ApiOperation(value = "Calculates HMAC for given message", consumes = "text/plain")
     @RequestMapping(method = RequestMethod.PUT, path = "/hmac")
     public String calculateHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String message) {
-        return HmacUtils.hmacSha512Hex(userDetails.currentDataEncryptionKey(), message);
+        ProtectionScheme protectionScheme = userDetails.activeProtectionScheme();
+        return protectionScheme.getId() + HASH_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.dataEncryptionKeyForScheme(protectionScheme.getId()), message);
     }
 
     @ApiOperation(value = "Verifies that given HMAC is valid for message")
@@ -34,58 +39,62 @@ public class DataProtectionApi {
             @ApiResponse(code = 204, message = "Hmac was valid for given message"),
             @ApiResponse(code = 422, message = "Hmac was not valid for given message")
     })
-    @RequestMapping(method = RequestMethod.PUT, path = "/hmac/verify")
+    @RequestMapping(method = RequestMethod.PUT, path = "/hmac/valid")
     public ResponseEntity<Void> verifyHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody HmacVerificationRequest request) {
-        String realHmac = HmacUtils.hmacSha512Hex(userDetails.currentDataEncryptionKey(), request.getMessage());
-        if (equalsNoEarlyReturn(realHmac, request.getHmacCandidate())) {
+        if (isValidMacFor(request.getMessage(), request.hmac(), userDetails, request.schemeId())) {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.unprocessableEntity().build();
     }
 
     @ApiOperation(value = "Encrypts given data using currently active encryption key", consumes = "text/plain")
-    @RequestMapping(method = RequestMethod.PUT, path = "/encrypt")
+    @RequestMapping(method = RequestMethod.PUT, path = "/encrypted")
     public String encrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToEncode) {
-        String salt = KeyGenerators.string().generateKey();
-        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), salt);
-        return new EncryptedMessage(salt, encryptor.encrypt(messageToEncode)).getMessageWithSalt();
+        return encryptedMessage(userDetails, messageToEncode).getProtectedMessage();
     }
 
     @ApiOperation(value = "Decrypts given data using currently active encryption key", consumes = "text/plain")
-    @RequestMapping(method = RequestMethod.PUT, path = "/decrypt")
+    @RequestMapping(method = RequestMethod.PUT, path = "/decrypted")
     public String decrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToDecode) {
-        EncryptedMessage encryptedMessage = new EncryptedMessage(messageToDecode);
-        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), encryptedMessage.getSalt());
+        return decryptedMessage(userDetails, new EncryptedMessage(messageToDecode));
+    }
+
+    @ApiOperation(value = "Encrypts and signs given data", consumes = "text/plain")
+    @RequestMapping(method = RequestMethod.PUT, path = "/encrypted-and-signed")
+    public EncryptedAndSignedMessage encryptAndSign(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToProtect) {
+        EncryptedMessage encryptedMessage = encryptedMessage(userDetails, messageToProtect);
+        String hmac = calculateHmac(userDetails, messageToProtect);
+        return new EncryptedAndSignedMessage(encryptedMessage.getProtectedMessage(), hmac);
+    }
+
+    @ApiOperation(value = "Decrypts and verifies given data")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Returns decrypted and verified message"),
+            @ApiResponse(code = 422, message = "Hmac was not valid for given message")
+    })
+    @RequestMapping(method = RequestMethod.PUT, path = "/decrypted-and-verified", produces = "text/plain", consumes = "application/json")
+    public ResponseEntity decryptAndVerify(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody EncryptedAndSignedMessage encryptedAndSignedMessage) {
+        String decryptedMessage = decryptedMessage(userDetails, encryptedAndSignedMessage.encryptedMessage());
+        if(isValidMacFor(decryptedMessage, encryptedAndSignedMessage.verificationRequest().hmac(), userDetails, encryptedAndSignedMessage.encryptedMessage().schemeId())) {
+            return ResponseEntity.ok(decryptedMessage);
+        }
+        return ResponseEntity.unprocessableEntity().build();
+    }
+
+    private EncryptedMessage encryptedMessage(PhaasUserDetails userDetails, String messageToEncode) {
+        String salt = KeyGenerators.string().generateKey();
+        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataEncryptionKey(), salt);
+        return new EncryptedMessage(userDetails.activeProtectionScheme().getId(), salt, encryptor.encrypt(messageToEncode));
+    }
+
+    private String decryptedMessage(PhaasUserDetails userDetails, EncryptedMessage encryptedMessage) {
+        TextEncryptor encryptor = Encryptors.delux(userDetails.dataEncryptionKeyForScheme(encryptedMessage.schemeId()), encryptedMessage.getSalt());
         return encryptor.decrypt(encryptedMessage.getEncryptedMessage());
     }
 
-    static class EncryptedMessage {
-        private static final String SEPARATOR = ":::";
-        @Getter
-        private final String messageWithSalt;
-
-        EncryptedMessage(String salt, String encryptedMessage) {
-            this.messageWithSalt = salt + ":::" + encryptedMessage;
-        }
-
-        EncryptedMessage(String encryptedMessageWithSalt) {
-            this.messageWithSalt = encryptedMessageWithSalt;
-        }
-
-        String getSalt() {
-            return messageWithSalt.split(SEPARATOR)[0];
-        }
-
-        String getEncryptedMessage() {
-            return messageWithSalt.split(SEPARATOR)[1];
-        }
-    }
-
-    @Data
-    static class HmacVerificationRequest {
-        private final String message;
-        private final String hmacCandidate;
-
+    private boolean isValidMacFor(String message, String hmacCandidate, PhaasUserDetails userDetails, int schemeId) {
+        String realHmac = HmacUtils.hmacSha512Hex(userDetails.dataEncryptionKeyForScheme(schemeId), message);
+        return equalsNoEarlyReturn(realHmac, hmacCandidate);
     }
 
     /**
@@ -94,13 +103,13 @@ public class DataProtectionApi {
     private static boolean equalsNoEarlyReturn(String a, String b) {
         char[] caa = a.toCharArray();
         char[] cab = b.toCharArray();
-        if(caa.length != cab.length) {
+        if (caa.length != cab.length) {
             return false;
         } else {
             byte ret = 0;
 
-            for(int i = 0; i < caa.length; ++i) {
-                ret = (byte)(ret | caa[i] ^ cab[i]);
+            for (int i = 0; i < caa.length; ++i) {
+                ret = (byte) (ret | caa[i] ^ cab[i]);
             }
 
             return ret == 0;
