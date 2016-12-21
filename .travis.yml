@@ -7,6 +7,7 @@ language: java
 cache:
   directories:
   - $HOME/.m2
+  - $HOME/.sonar/cache
 
 jdk:
   - oraclejdk8
@@ -23,3 +24,8 @@ addons:
     build_command_prepend: "mvn clean"
     build_command:   "mvn -DskipTests=true install"
     branch_pattern: coverity_scan
+
+  sonarqube:
+    token:
+      secure: "pHbd0H4ImgNzdW66NqShCIHLiVkTyi4B5iyHwMX+xPz8B63jNOFFpggA9mTNmJb73ww4B06kqFkQoaHhTMhrOtMJ7abbtkl/op5LnaMfLiTjyfVnuK2bf4LzsO0bwy6UJQMSYVGKjvjHMpQ88NGEWQhvL6qIYZ702qw6D5ivXWAiJdVofgls90Clz1x2wGdwRfmD6eoSzyF1RVKLGcy1dVkkaTPB9n1zW7UENjnr9YbkHtOoNEPyo3mfZYqaf7DrAHQZxIdWN/G+g20DmyuoBWWYbbzwPjHYkvzS0vugUar1w6Ov2fYAR1uVSCbm25lFiS1rglvNHTGLhFm+utS0zuYa8KgMr/rkKNeDFxIOBwEDhkxnLqRzxAy7+3dRIlL0VW1E9c1geRl1s6ICYiUqUorqt/hGEDvLDrku49VTSogumAp4Llgr141LERuamasirEV5q70rKInAVS4HpUSzHNxHDV0+15nNKB6r0xpf9bnD0n48taefOUJaUF0kBqv11ENYAoSq9WiLadv837Y4lymsUkkYJdWYDNQ0Qx3egGfxoi7GAxqYLKRuuKlUkuJhA/kwFFdidd50MoaVta7b899cyrPA37OjLQBtqhno9Lovvnh0ur29fUujCLTfBAXgV75FcqI1jfM6BnjXYIoUf5aAJRC9T1rB6x8v6P719LY="
+
