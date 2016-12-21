@@ -1,5 +1,12 @@
+env:
+  global:
+   - secure: "oVKywFatS4tcScNEwoe/chN09uAdTO8REOzTRzGC2RtQcoAiCAITrvver62M9+f9/iOSPjqb7rjmx76xzs5AgyoXzOSYbswZmXh7C9+awLzcqSyOigCSTYODhRxkO+jMdfnDcBOQJjcrNZ5QGoQAPvg4KGNtuJBmwZ3kI2+NzV5ho/VVyLt8z+bEM9LEP/RTi3aNdRTb+p1BoAcMEtttDVIiI1UGIKK36bTQJiHlDTcnOImfV5TUeUGxnsV3l4t8EIPurXu6N8SFYFdsb7Xxk3iHaWk26gJ14ZHmdAcucoaoUoUfpSYoPsISWdzo9g4Zs6R03ARWOrPvlDHyqWhoG3xJk/ejdp2vVr0QdgsJrsokYjwOGOXh1HKe7xc4ImW+NK7czlDjTDayoZvwBhN2UlySqXNhxaeEZsSVlnq4MgMgpz3oLRK5MePaT7wK0JcqrmQOreLea66d49WBlfRWXllu7ls6F6kEyWk59YMfXhTrSeYu8wXCQEiAE/a9epScdi9BV/thR+TgjI/aGPZJ0bNtgiSWt27SigJSPH8xzmg+nSwEuHf1ZiXLInpX7HLlEZ+MPMrqX/eBxoWnEHTvs8mC8R8CFb4PqsfSrKBrOLrlr+fGzVittQ+8KA4DWwY7q0sBIChTAlVhYSr8ZA8gkeKD6aBeFuqRqKrCUvkx+U0="
+
 language: java
-sudo: false
+sudo: true
+
+before_install:
+      - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
 
 cache:
   directories:
@@ -10,3 +17,13 @@ jdk:
 
 after_success:
   - mvn jacoco:report coveralls:report
+
+addons:
+  coverity_scan:
+    project:
+      name: "TomiTakussaari/phaas"
+      description: "Build submitted via Travis CI"
+    build_command_prepend: "mvn clean"
+    build_command:   "mvn -DskipTests=true compile"
+    branch_pattern: master
+
