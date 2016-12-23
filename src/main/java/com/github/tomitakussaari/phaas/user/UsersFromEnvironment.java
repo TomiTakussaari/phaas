@@ -16,7 +16,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +23,7 @@ import java.util.Optional;
 import static com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
+import static com.github.tomitakussaari.phaas.util.JsonHelper.objectMapSafely;
 
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Component
@@ -68,17 +68,5 @@ class UsersFromEnvironment {
             return objectMapSafely(() -> objectMapper.writeValueAsString(input));
         }
 
-        static <T> T objectMapSafely(ObjectMapperOperation<T> objectMapperOperation) {
-            try {
-                return objectMapperOperation.get();
-            } catch (IOException e) {
-                throw new UnsupportedOperationException("JSON serialization does not work ?", e);
-            }
-        }
-
-        @FunctionalInterface
-        public interface ObjectMapperOperation<T> {
-            T get() throws IOException;
-        }
     }
 }

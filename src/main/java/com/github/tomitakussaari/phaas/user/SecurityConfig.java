@@ -2,6 +2,7 @@ package com.github.tomitakussaari.phaas.user;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomitakussaari.phaas.util.JsonHelper;
 import io.dropwizard.servlets.ThreadNameFilter;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.slf4j.MDC;
@@ -94,13 +95,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public static class HmacCalculationAdvice implements ResponseBodyAdvice<Object> {
         public static final String X_RESPONSE_SIGN = "X-Response-Signature";
 
-        private final ObjectMapper objectMapper;
-
-        @Autowired
-        public HmacCalculationAdvice(ObjectMapper objectMapper) {
-            this.objectMapper = objectMapper;
-        }
-
         @Override
         public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
             return true;
@@ -114,7 +108,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             if(authentication != null && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
                 PhaasUserDetails userDetails = (PhaasUserDetails) authentication.getPrincipal();
                 String responseTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
-                String bodyAsString = serializeToString(body);
+                String bodyAsString = JsonHelper.serialize(body);
                 String finalHmac = calculateSignature(response.getHeaders().getFirst(X_REQUEST_ID), userDetails.communicationSigningKey(), responseTime, bodyAsString);
                 response.getHeaders().add("date", responseTime);
                 response.getHeaders().add(X_RESPONSE_SIGN, finalHmac);
@@ -126,14 +120,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             String bodyHmac = HmacUtils.hmacSha256Hex(signKey, bodyAsString);
             String xApiRequestIdHmac = HmacUtils.hmacSha256Hex(bodyHmac, requestId);
             return HmacUtils.hmacSha256Hex(xApiRequestIdHmac, responseTime);
-        }
-
-        private String serializeToString(Object body) {
-            try {
-                return objectMapper.writeValueAsString(body);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 

@@ -3,6 +3,7 @@ package com.github.tomitakussaari.phaas.user;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
+import com.github.tomitakussaari.phaas.util.JsonHelper;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -68,7 +69,7 @@ public class UsersFromEnvironmentTest {
 
     @Test(expected = RuntimeException.class)
     public void userDataObjectMapSafelyThrowsRuntimeExceptionOnIOException() {
-        UsersFromEnvironment.UserData.objectMapSafely(() -> {
+        JsonHelper.objectMapSafely(() -> {
             throw new IOException("expected");
         });
     }

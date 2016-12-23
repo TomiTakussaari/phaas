@@ -1,12 +1,8 @@
 package com.github.tomitakussaari.phaas;
 
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import com.github.tomitakussaari.phaas.util.JsonHelper;
 import com.github.tomitakussaari.phaas.util.PasswordHasher;
 import com.github.tomitakussaari.phaas.util.PasswordVerifier;
 import com.zaxxer.hikari.HikariDataSource;
@@ -40,17 +36,9 @@ public class AppConfig {
         return new PasswordHasher();
     }
 
-
     @Bean
     @Primary
     public ObjectMapper objectMapper() {
-        return new ObjectMapper()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .registerModule(new Jdk8Module())
-                .registerModule(new ParameterNamesModule())
-                .registerModule(new AfterburnerModule());
+        return JsonHelper.objectMapper;
     }
 }
