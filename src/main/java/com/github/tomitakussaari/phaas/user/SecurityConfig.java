@@ -1,7 +1,5 @@
 package com.github.tomitakussaari.phaas.user;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomitakussaari.phaas.util.JsonHelper;
 import io.dropwizard.servlets.ThreadNameFilter;
 import org.apache.commons.codec.digest.HmacUtils;
@@ -34,7 +32,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -84,7 +81,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return filterRegistration(new ThreadNameFilter());
     }
 
-    private  FilterRegistrationBean filterRegistration(Filter filter) {
+    private FilterRegistrationBean filterRegistration(Filter filter) {
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();
         registrationBean.setFilter(filter);
         registrationBean.setOrder(0);
@@ -105,7 +102,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                       Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                       ServerHttpRequest request, ServerHttpResponse response) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if(authentication != null && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
+            if (authentication != null && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
                 PhaasUserDetails userDetails = (PhaasUserDetails) authentication.getPrincipal();
                 String responseTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
                 String bodyAsString = JsonHelper.serialize(body);
@@ -157,9 +154,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }
 
         String getPath(HttpServletRequest request) {
-            String path =  request.getRequestURI().substring(request.getContextPath().length());
-            if(request.getQueryString() != null) {
-                path = path + "?"+request.getQueryString();
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            if (request.getQueryString() != null) {
+                path = path + "?" + request.getQueryString();
             }
             return path;
         }
