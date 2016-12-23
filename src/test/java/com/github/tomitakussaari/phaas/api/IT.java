@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static javax.ws.rs.client.Entity.json;

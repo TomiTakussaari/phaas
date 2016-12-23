@@ -1,5 +1,6 @@
 package com.github.tomitakussaari.phaas;
 
+import com.github.tomitakussaari.phaas.user.SecurityConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -34,7 +35,7 @@ public class SwaggerConfig {
 
     private List<Parameter> globalParameters() {
         return Collections.singletonList(new ParameterBuilder()
-                .name(AppConfig.AuditAndLoggingFilter.X_REQUEST_ID)
+                .name(SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID)
                 .description("Request ID")
                 .modelRef(new ModelRef("string"))
                 .parameterType("header")

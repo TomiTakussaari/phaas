@@ -1,6 +1,6 @@
 package com.github.tomitakussaari.phaas.api;
 
-import com.github.tomitakussaari.phaas.AppConfig;
+import com.github.tomitakussaari.phaas.user.SecurityConfig;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ErrorAttributes;
@@ -35,7 +35,7 @@ public class RootEndpoint implements ErrorController {
     public ExceptionAdvisor.ErrorMessage showErrorMessage(HttpServletRequest request, HttpServletResponse response) {
         RequestAttributes requestAttributes = new ServletRequestAttributes(request);
         Map<String, Object> requestErrorAttributes = this.errorAttributes.getErrorAttributes(requestAttributes, false);
-        return new ExceptionAdvisor.ErrorMessage(requestErrorAttributes.get("message") + "", requestErrorAttributes.get("error") + "", MDC.get(AppConfig.AuditAndLoggingFilter.MDC_REQUEST_ID), response.getStatus());
+        return new ExceptionAdvisor.ErrorMessage(requestErrorAttributes.get("message") + "", requestErrorAttributes.get("error") + "", MDC.get(SecurityConfig.AuditAndLoggingFilter.MDC_REQUEST_ID), response.getStatus());
     }
 
     @Override
