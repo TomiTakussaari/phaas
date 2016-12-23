@@ -21,6 +21,6 @@ public class PasswordVerifyRequest {
     }
 
     public String encryptedPasswordHash() {
-        return hash.split(":::")[2];
+        return getHash().split(":::")[2];
     }
 }

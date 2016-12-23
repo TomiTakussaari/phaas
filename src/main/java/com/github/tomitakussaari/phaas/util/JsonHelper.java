@@ -32,7 +32,6 @@ public abstract class JsonHelper {
         }
     }
 
-    @FunctionalInterface
     public interface ObjectMapperOperation<T> {
         T get() throws IOException;
     }
