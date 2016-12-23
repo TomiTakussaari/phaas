@@ -57,13 +57,13 @@ public class ApiUsersService implements UserDetailsService {
         return phaasUserRepository.count() > 0L;
     }
 
-    public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles) {
-        return createUser(userName, algorithm, roles, generatePassword());
+    public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles, Optional<String> sharedSecretForSigningCommunication) {
+        return createUser(userName, algorithm, roles, generatePassword(), sharedSecretForSigningCommunication.orElse(null));
     }
 
-    public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String userPassword) {
+    public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String userPassword, String sharedSecretForSigningCommunication) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        UserDTO userDTO = new UserDTO(null, userName, encoder.encode(userPassword), roles.stream().map(ROLE::getValue).collect(joining(",")));
+        UserDTO userDTO = new UserDTO(null, userName, encoder.encode(userPassword), roles.stream().map(ROLE::getValue).collect(joining(",")), sharedSecretForSigningCommunication);
 
         UserConfigurationDTO configurationDTO = getUserConfigurationDTO(algorithm, userPassword, userDTO);
         create(userDTO, configurationDTO);

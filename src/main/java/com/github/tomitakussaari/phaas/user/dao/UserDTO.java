@@ -31,6 +31,8 @@ public class UserDTO implements Serializable {
     @NonNull
     private String roles;
 
+    private String sharedSecretForSigningCommunication;
+
     public List<String> roles() {
         return Arrays.asList(roles.split(","));
     }

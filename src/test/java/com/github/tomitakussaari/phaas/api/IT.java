@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static javax.ws.rs.client.Entity.json;
@@ -29,6 +30,7 @@ public abstract class IT {
 
     protected static final String USER_NAME = "testuser";
     protected static final String USER_PASSWORD = "testpassword";
+    protected static final String USER_SIGNING_KEY = "test-sign-key";
 
     @Autowired
     protected ApiUsersService apiUsersService;
@@ -41,7 +43,7 @@ public abstract class IT {
 
     @Before
     public void initialize() {
-        apiUsersService.createUser(USER_NAME, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD);
+        apiUsersService.createUser(USER_NAME, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD, USER_SIGNING_KEY);
     }
 
     @After

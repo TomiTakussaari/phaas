@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
@@ -37,8 +39,9 @@ class UsersFromEnvironment {
             UserData.deSerialize(usersConf).forEach(userData -> apiUsersService.create(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
             log.info("Initialized user database from environment configuration");
         } else if (!apiUsersService.hasUsers()) {
-            String password = apiUsersService.createUser("admin", DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ADMIN, USER));
-            log.info("*** Created 'admin' user with password '{}' ***", password);
+            String signingKey = RandomStringUtils.randomAlphabetic(10);
+            String password = apiUsersService.createUser("admin", DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ADMIN, USER), Optional.of(signingKey));
+            log.info("|*****| Created 'admin' user with password '{}' and signing key: '{}'", password, signingKey);
         }
     }
 

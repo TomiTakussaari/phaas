@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -39,7 +40,7 @@ public class UsersApi {
     @RequestMapping(method = RequestMethod.POST, produces = "application/json")
     public CreateUserResponse createUser(@RequestBody CreateUserRequest request) {
         rejectIfUserDatabaseIsImmutable();
-        return new CreateUserResponse(apiUsersService.createUser(request.getUserName(), request.getAlgorithm(), request.getRoles()));
+        return new CreateUserResponse(apiUsersService.createUser(request.getUserName(), request.getAlgorithm(), request.getRoles(), request.getSharedSecretForSigningCommunication()));
     }
 
     @ApiOperation(value = "Lists all users, only usable by admins")
@@ -105,6 +106,7 @@ public class UsersApi {
         private final PasswordEncodingAlgorithm algorithm;
         @NonNull
         private final List<ApiUsersService.ROLE> roles;
+        private final Optional<String> sharedSecretForSigningCommunication;
     }
 
     @RequiredArgsConstructor
