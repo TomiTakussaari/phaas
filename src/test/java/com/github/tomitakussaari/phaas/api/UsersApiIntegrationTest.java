@@ -1,7 +1,8 @@
 package com.github.tomitakussaari.phaas.api;
 
+import com.github.tomitakussaari.phaas.user.SecurityConfig;
+import org.apache.commons.codec.digest.HmacUtils;
 import org.hamcrest.Matchers;
-import org.junit.After;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -31,6 +32,17 @@ public class UsersApiIntegrationTest extends IT {
         assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
         Map currentUserWithNewScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
         assertNotEquals(currentUserWithOldScheme, currentUserWithNewScheme);
+    }
+
+    @Test
+    public void returnsResponseSignatureThatCanBeUsedToVerifyResponse() {
+        Response response = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
+        String body = response.readEntity(String.class);
+        String actualSignature = response.getHeaderString(SecurityConfig.HmacCalculationAdvice.X_RESPONSE_SIGN);
+        String requestId = response.getHeaderString(SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID);
+        String date = response.getHeaderString("date");
+        String expectedSignature = SecurityConfig.HmacCalculationAdvice.calculateSignature(requestId, USER_SIGNING_KEY, date, body);
+        assertEquals(expectedSignature, actualSignature);
     }
 
     private void validateUser(Map currentUser) {

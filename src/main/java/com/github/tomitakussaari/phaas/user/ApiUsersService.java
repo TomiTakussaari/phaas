@@ -119,7 +119,7 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     private String generatePassword() {
-        return RandomStringUtils.randomAscii(30);
+        return RandomStringUtils.randomAscii(30).trim();
     }
 
     @RequiredArgsConstructor

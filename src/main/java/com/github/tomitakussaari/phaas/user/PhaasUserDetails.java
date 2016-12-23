@@ -43,11 +43,15 @@ public class PhaasUserDetails implements UserDetails {
         return (CharSequence) SecurityContextHolder.getContext().getAuthentication().getCredentials();
     }
 
-    public CryptoData currentDataProtectionScheme() {
+    public String communicationSigningKey() {
+        return userDTO.getSharedSecretForSigningCommunication();
+    }
+
+    public CryptoData currentlyActiveCryptoData() {
         return activeProtectionScheme().decryptedProtectionScheme(findCurrentUserPassword());
     }
 
-    public CryptoData dataProtectionSchemeForId(int schemeId) {
+    public CryptoData cryptoDataForId(int schemeId) {
         return protectionScheme(schemeId).decryptedProtectionScheme(findCurrentUserPassword());
     }
 

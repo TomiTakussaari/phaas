@@ -31,7 +31,7 @@ public class DataProtectionApi {
     @RequestMapping(method = RequestMethod.PUT, path = "/hmac")
     public String calculateHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String message) {
         DataProtectionScheme dataProtectionScheme = userDetails.activeProtectionScheme();
-        return dataProtectionScheme.getId() + HASH_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.dataProtectionSchemeForId(dataProtectionScheme.getId()).dataProtectionKey(), message);
+        return dataProtectionScheme.getId() + HASH_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.cryptoDataForId(dataProtectionScheme.getId()).dataProtectionKey(), message);
     }
 
     @ApiOperation(value = "Verifies that given HMAC is valid for message")
@@ -83,17 +83,17 @@ public class DataProtectionApi {
 
     private EncryptedMessage encryptedMessage(PhaasUserDetails userDetails, String messageToEncode) {
         String salt = KeyGenerators.string().generateKey();
-        TextEncryptor encryptor = Encryptors.delux(userDetails.currentDataProtectionScheme().dataProtectionKey(), salt);
+        TextEncryptor encryptor = Encryptors.delux(userDetails.currentlyActiveCryptoData().dataProtectionKey(), salt);
         return new EncryptedMessage(userDetails.activeProtectionScheme().getId(), salt, encryptor.encrypt(messageToEncode));
     }
 
     private String decryptedMessage(PhaasUserDetails userDetails, EncryptedMessage encryptedMessage) {
-        TextEncryptor encryptor = Encryptors.delux(userDetails.dataProtectionSchemeForId(encryptedMessage.schemeId()).dataProtectionKey(), encryptedMessage.getSalt());
+        TextEncryptor encryptor = Encryptors.delux(userDetails.cryptoDataForId(encryptedMessage.schemeId()).dataProtectionKey(), encryptedMessage.getSalt());
         return encryptor.decrypt(encryptedMessage.getEncryptedMessage());
     }
 
     private boolean isValidMacFor(String message, String hmacCandidate, PhaasUserDetails userDetails, int schemeId) {
-        String realHmac = HmacUtils.hmacSha512Hex(userDetails.dataProtectionSchemeForId(schemeId).dataProtectionKey(), message);
+        String realHmac = HmacUtils.hmacSha512Hex(userDetails.cryptoDataForId(schemeId).dataProtectionKey(), message);
         return equalsNoEarlyReturn(realHmac, hmacCandidate);
     }
 

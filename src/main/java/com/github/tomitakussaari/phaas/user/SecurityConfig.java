@@ -1,11 +1,19 @@
 package com.github.tomitakussaari.phaas.user;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.servlets.ThreadNameFilter;
+import org.apache.commons.codec.digest.HmacUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.MethodParameter;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,7 +23,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -23,10 +33,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import static com.github.tomitakussaari.phaas.user.SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
@@ -74,6 +88,53 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         registrationBean.setFilter(filter);
         registrationBean.setOrder(0);
         return registrationBean;
+    }
+
+    @ControllerAdvice
+    public static class HmacCalculationAdvice implements ResponseBodyAdvice<Object> {
+        public static final String X_RESPONSE_SIGN = "X-Response-Signature";
+
+        private final ObjectMapper objectMapper;
+
+        @Autowired
+        public HmacCalculationAdvice(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
+        }
+
+        @Override
+        public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
+            return true;
+        }
+
+        @Override
+        public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
+                                      Class<? extends HttpMessageConverter<?>> selectedConverterType,
+                                      ServerHttpRequest request, ServerHttpResponse response) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if(authentication != null && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
+                PhaasUserDetails userDetails = (PhaasUserDetails) authentication.getPrincipal();
+                String responseTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
+                String bodyAsString = serializeToString(body);
+                String finalHmac = calculateSignature(response.getHeaders().getFirst(X_REQUEST_ID), userDetails.communicationSigningKey(), responseTime, bodyAsString);
+                response.getHeaders().add("date", responseTime);
+                response.getHeaders().add(X_RESPONSE_SIGN, finalHmac);
+            }
+            return body;
+        }
+
+        public static String calculateSignature(String requestId, String signKey, String responseTime, String bodyAsString) {
+            String bodyHmac = HmacUtils.hmacSha256Hex(signKey, bodyAsString);
+            String xApiRequestIdHmac = HmacUtils.hmacSha256Hex(bodyHmac, requestId);
+            return HmacUtils.hmacSha256Hex(xApiRequestIdHmac, responseTime);
+        }
+
+        private String serializeToString(Object body) {
+            try {
+                return objectMapper.writeValueAsString(body);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static class AuditAndLoggingFilter extends OncePerRequestFilter {
