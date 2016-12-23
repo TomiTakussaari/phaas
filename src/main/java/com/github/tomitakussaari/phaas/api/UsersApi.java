@@ -76,7 +76,7 @@ public class UsersApi {
 
     private void rejectIfUserDatabaseIsImmutable() {
         if (environment.getProperty("immutable.users.db", Boolean.class)) {
-            throw new UnsupportedOperationException("");
+            throw new OperationIsNotAvailableException("operation is not available");
         }
     }
 

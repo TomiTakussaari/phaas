@@ -15,7 +15,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class UserConfigurationDTO implements Serializable {
+public final class UserConfigurationDTO implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
