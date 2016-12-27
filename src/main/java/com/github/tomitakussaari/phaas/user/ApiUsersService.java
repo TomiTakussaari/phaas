@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_VALUE_SEPARATOR;
 import static java.util.stream.Collectors.joining;
 
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -109,7 +110,7 @@ public class ApiUsersService implements UserDetailsService {
         String encryptionKey = RandomStringUtils.random(30);
         TextEncryptor encryptor = Encryptors.text(password, salt);
         String encryptedKey = encryptor.encrypt(encryptionKey);
-        return salt + ":::" + encryptedKey;
+        return salt + TOKEN_VALUE_SEPARATOR + encryptedKey;
     }
 
     private UserConfigurationDTO getUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, CharSequence password, UserDTO userDTO) {

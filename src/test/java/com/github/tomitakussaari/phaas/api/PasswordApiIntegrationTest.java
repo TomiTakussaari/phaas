@@ -83,7 +83,7 @@ public class PasswordApiIntegrationTest extends IT {
 
     @Test
     public void unAuthenticatedCannotAccessVerifyApi() {
-        Response response = unAuthenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", "wrong-password", "hash", "1:::foobar")));
+        Response response = unAuthenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", "wrong-password", "hash", "1.foobar")));
         assertEquals(401, response.getStatus());
     }
 }

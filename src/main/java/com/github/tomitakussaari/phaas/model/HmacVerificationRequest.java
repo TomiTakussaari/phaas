@@ -1,9 +1,10 @@
 package com.github.tomitakussaari.phaas.model;
 
-import com.github.tomitakussaari.phaas.api.DataProtectionApi;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR;
 
 @Getter
 @RequiredArgsConstructor
@@ -14,11 +15,11 @@ public class HmacVerificationRequest {
     private final String authenticationCode;
 
     public int schemeId() {
-        return Integer.valueOf(authenticationCode.split(DataProtectionApi.HASH_VALUE_SEPARATOR)[0]);
+        return Integer.valueOf(authenticationCode.split(ESCAPED_TOKEN_VALUE_SEPARATOR)[0]);
     }
 
     public String hmac() {
-        return authenticationCode.split(DataProtectionApi.HASH_VALUE_SEPARATOR)[1];
+        return authenticationCode.split(ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
     }
 
 

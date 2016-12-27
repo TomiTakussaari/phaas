@@ -8,6 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Getter
 @EqualsAndHashCode
 public class DataProtectionScheme {
+
+    public static final String TOKEN_VALUE_SEPARATOR = ".";
+    public static final String ESCAPED_TOKEN_VALUE_SEPARATOR = "\\"+TOKEN_VALUE_SEPARATOR;
+
     private final int id;
     @NonNull
     private final PasswordEncodingAlgorithm algorithm;
@@ -40,11 +44,11 @@ public class DataProtectionScheme {
             return Encryptors.text(userPassword, salt()).decrypt(cryptPassword());
         }
         private String salt() {
-            return scheme.protectedEncryptionKey.split(":::")[0];
+            return scheme.protectedEncryptionKey.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[0];
         }
 
         private String cryptPassword() {
-            return scheme.protectedEncryptionKey.split(":::")[1];
+            return scheme.protectedEncryptionKey.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
         }
     }
 

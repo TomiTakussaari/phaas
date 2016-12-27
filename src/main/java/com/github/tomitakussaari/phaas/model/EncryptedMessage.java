@@ -2,14 +2,17 @@ package com.github.tomitakussaari.phaas.model;
 
 import lombok.Getter;
 
+import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_VALUE_SEPARATOR;
+import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR;
+
 public class EncryptedMessage {
-    private static final String HASH_VALUE_SEPARATOR = ":::";
+
 
     @Getter
     private final String protectedMessage;
     public
     EncryptedMessage(int schemeId, String salt, String encryptedMessage) {
-        this.protectedMessage = schemeId +HASH_VALUE_SEPARATOR+ salt + HASH_VALUE_SEPARATOR + encryptedMessage;
+        this.protectedMessage = schemeId + TOKEN_VALUE_SEPARATOR + salt + TOKEN_VALUE_SEPARATOR + encryptedMessage;
     }
 
     public EncryptedMessage(String encryptedMessageWithSalt) {
@@ -17,15 +20,15 @@ public class EncryptedMessage {
     }
 
     public String getSalt() {
-        return protectedMessage.split(HASH_VALUE_SEPARATOR)[1];
+        return protectedMessage.split(ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
     }
 
     public String getEncryptedMessage() {
-        return protectedMessage.split(HASH_VALUE_SEPARATOR)[2];
+        return protectedMessage.split(ESCAPED_TOKEN_VALUE_SEPARATOR)[2];
     }
 
     public int schemeId() {
-        return Integer.valueOf(protectedMessage.split(HASH_VALUE_SEPARATOR)[0]);
+        return Integer.valueOf(protectedMessage.split(ESCAPED_TOKEN_VALUE_SEPARATOR)[0]);
     }
 
 }

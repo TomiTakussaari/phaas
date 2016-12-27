@@ -1,6 +1,5 @@
 package com.github.tomitakussaari.phaas.model;
 
-import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +10,17 @@ import java.util.Map;
 @UtilityClass
 public class JWT {
 
+    public enum Algorithm {
+        HS256,
+        HS384,
+        HS512
+    }
+
     @RequiredArgsConstructor
     @Getter
     public static class JwtCreateRequest {
         @NonNull
-        private final SignatureAlgorithm algorithm;
+        private final Algorithm algorithm;
         @NonNull
         private final Map<String, Object> claims;
     }

@@ -9,7 +9,7 @@ public class PasswordVerifyRequestTest {
     @Test
     public void compatibleWithHashedPassword() {
         String hash = HashedPassword.from(12, "wannaBeSalt", "hashedPasswordWouldBeHere").getHash();
-        assertEquals("12:::wannaBeSalt:::hashedPasswordWouldBeHere", hash);
+        assertEquals("12.wannaBeSalt.hashedPasswordWouldBeHere", hash);
         PasswordVerifyRequest request = new PasswordVerifyRequest("pw", hash);
         assertEquals(hash, request.getHash());
         assertEquals("hashedPasswordWouldBeHere", request.encryptedPasswordHash());

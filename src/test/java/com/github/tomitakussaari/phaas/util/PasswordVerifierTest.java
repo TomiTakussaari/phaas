@@ -17,8 +17,8 @@ public class PasswordVerifierTest {
     private final String password = "password";
     private final String encryptionKey = "encryption_key";
     private final String encryptionKeyTwo= "encryption_key2";
-    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, salt+":::"+Encryptors.text(password, salt).encrypt(encryptionKey));
-    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, salt+":::"+Encryptors.text(password, salt).encrypt(encryptionKeyTwo));
+    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, salt+"."+Encryptors.text(password, salt).encrypt(encryptionKey));
+    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, salt+"."+Encryptors.text(password, salt).encrypt(encryptionKeyTwo));
     private final DataProtectionScheme.CryptoData decryptedCurrentProtectionScheme = currentDataProtectionScheme.decryptedProtectionScheme(password);
     private final DataProtectionScheme.CryptoData decryptedNewProtectionScheme = newDataProtectionScheme.decryptedProtectionScheme(password);
 
@@ -86,7 +86,7 @@ public class PasswordVerifierTest {
 
     @Test
     public void verifiesExistingHash() {
-        String hash = "1:::64e68551653223cb:::8bd0e4de5c6b0ab83d5f01b7a2b79ea59f41e24cdcb39e65de6106249190e061159cb4d19b03bd40582b4cc530e0a437a0630eb97ae0a2f89987214dc43a8fec32c04a7a565e328422ef4786ff64423c";
+        String hash = "1.64e68551653223cb.8bd0e4de5c6b0ab83d5f01b7a2b79ea59f41e24cdcb39e65de6106249190e061159cb4d19b03bd40582b4cc530e0a437a0630eb97ae0a2f89987214dc43a8fec32c04a7a565e328422ef4786ff64423c";
         PasswordVerifyResult result = verifier.verify(new PasswordVerifyRequest("password", hash), decryptedCurrentProtectionScheme, decryptedCurrentProtectionScheme);
         assertTrue(result.isValid());
     }

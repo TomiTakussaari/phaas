@@ -28,28 +28,30 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_VALUE_SEPARATOR;
+
 @RestController
 @RequestMapping("/data-protection")
 public class DataProtectionApi {
 
-    public static final String HASH_VALUE_SEPARATOR = ":::";
     private static final String JWT_SCHEME_ID_HEADER_PARAM = "phaas-scheme-id";
 
     @ApiOperation(value = "Creates JWT", consumes = "application/json")
-    @RequestMapping(method = RequestMethod.POST, path = "/jwt")
+    @RequestMapping(method = RequestMethod.POST, path = "/token")
     public String generateJWT(@RequestBody JwtCreateRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         DataProtectionScheme.CryptoData cryptoData = userDetails.currentlyActiveCryptoData();
+        SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(createRequest.getAlgorithm().name());
         return Jwts.builder()
                 .setClaims(createRequest.getClaims())
                 .setIssuedAt(new Date())
                 .setHeaderParam(JWT_SCHEME_ID_HEADER_PARAM, cryptoData.getScheme().getId())
-                .signWith(createRequest.getAlgorithm(), cryptoData.dataProtectionKey().getBytes())
+                .signWith(algorithm, createKeySpec(algorithm, userDetails.currentlyActiveCryptoData()))
                 .compressWith(CompressionCodecs.DEFLATE).compact();
 
     }
 
     @ApiOperation(value = "Verifies JWT and returns payload", consumes = "application/json")
-    @RequestMapping(method = RequestMethod.PUT, path = "/jwt")
+    @RequestMapping(method = RequestMethod.PUT, path = "/token")
     public Map<String, Object> parseJwt(@RequestBody JwtParseRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         Jws<Claims> jws = getJwtParser(userDetails, parseRequest).parseClaimsJws(parseRequest.getToken());
         Map<String, Object> body = new HashMap<>(jws.getBody());
@@ -62,7 +64,7 @@ public class DataProtectionApi {
     @RequestMapping(method = RequestMethod.POST, path = "/hmac")
     public String calculateHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String message) {
         DataProtectionScheme dataProtectionScheme = userDetails.activeProtectionScheme();
-        return dataProtectionScheme.getId() + HASH_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.cryptoDataForId(dataProtectionScheme.getId()).dataProtectionKey(), message);
+        return dataProtectionScheme.getId() + TOKEN_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.cryptoDataForId(dataProtectionScheme.getId()).dataProtectionKey(), message);
     }
 
     @ApiOperation(value = "Verifies that given HMAC is valid for message")
@@ -149,9 +151,12 @@ public class DataProtectionApi {
         public Key resolveSigningKey(JwsHeader header, String s) {
             SignatureAlgorithm alg = SignatureAlgorithm.forName(header.getAlgorithm());
             int schemeId = (Integer) header.get(JWT_SCHEME_ID_HEADER_PARAM);
-            byte[] keyBytes = userDetails.cryptoDataForId(schemeId).dataProtectionKey().getBytes();
-            return new SecretKeySpec(keyBytes, alg.getJcaName());
+            return createKeySpec(alg, userDetails.cryptoDataForId(schemeId));
         }
+    }
+
+    static Key createKeySpec(SignatureAlgorithm alg, DataProtectionScheme.CryptoData cryptoData) {
+        return new SecretKeySpec(cryptoData.dataProtectionKey().getBytes(), alg.getJcaName());
     }
 
     /**
