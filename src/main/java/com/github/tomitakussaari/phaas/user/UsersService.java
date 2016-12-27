@@ -2,8 +2,8 @@ package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
-import com.github.tomitakussaari.phaas.user.dao.PhaasUserConfigurationRepository;
-import com.github.tomitakussaari.phaas.user.dao.PhaasUserRepository;
+import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
+import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import lombok.Getter;
@@ -31,31 +31,31 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Component
 @Slf4j
-public class ApiUsersService implements UserDetailsService {
+public class UsersService implements UserDetailsService {
 
     public static final String ADMIN_ROLE_VALUE = "ROLE_ADMIN";
     public static final String USER_ROLE_VALUE = "ROLE_USER";
 
-    private final PhaasUserConfigurationRepository phaasUserConfigurationRepository;
-    private final PhaasUserRepository phaasUserRepository;
+    private final UserConfigurationRepository userConfigurationRepository;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        return phaasUserRepository.findByUserName(username)
-                .map(userDTO -> new PhaasUserDetails(userDTO, phaasUserConfigurationRepository.findByUser(username)))
+        return userRepository.findByUserName(username)
+                .map(userDTO -> new PhaasUserDetails(userDTO, userConfigurationRepository.findByUser(username)))
                 .orElseThrow(() -> new UsernameNotFoundException("Not found: "+username));
     }
 
     public List<PhaasUserDetails> findAll() {
         List<PhaasUserDetails> details = new ArrayList<>();
-        for(UserDTO user: phaasUserRepository.findAll()) {
-            details.add(new PhaasUserDetails(user, phaasUserConfigurationRepository.findByUser(user.getUserName())));
+        for(UserDTO user: userRepository.findAll()) {
+            details.add(new PhaasUserDetails(user, userConfigurationRepository.findByUser(user.getUserName())));
         }
         return details;
     }
 
     boolean hasUsers() {
-        return phaasUserRepository.count() > 0L;
+        return userRepository.count() > 0L;
     }
 
     public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles, Optional<String> sharedSecretForSigningCommunication) {
@@ -63,8 +63,9 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String userPassword, String sharedSecretForSigningCommunication) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        UserDTO userDTO = new UserDTO(null, userName, encoder.encode(userPassword), roles.stream().map(ROLE::getValue).collect(joining(",")), sharedSecretForSigningCommunication);
+        UserDTO userDTO = new UserDTO(null, userName, passwordEncoder().encode(userPassword),
+                roles.stream().map(ROLE::getValue).collect(joining(",")),
+                sharedSecretForSigningCommunication);
 
         UserConfigurationDTO configurationDTO = getUserConfigurationDTO(algorithm, userPassword, userDTO);
         create(userDTO, configurationDTO);
@@ -72,36 +73,48 @@ public class ApiUsersService implements UserDetailsService {
     }
 
     @Transactional
+    public void changePasswordAndSecret(String userName, String newPassword, Optional<String> sharedSecretForSigningCommunication) {
+        userRepository.findByUserName(userName)
+                .map(user -> user.setPasswordHash(passwordEncoder().encode(newPassword)))
+                .map(user -> sharedSecretForSigningCommunication.map(user::setSharedSecretForSigningCommunication).orElse(user))
+                .ifPresent(userRepository::save);
+    }
+
+    private BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(11);
+    }
+
+    @Transactional
     public void deleteUser(String userName) {
-        phaasUserRepository.findByUserName(userName).ifPresent(userDTO -> {
-            phaasUserConfigurationRepository.deleteByUser(userName);
-            phaasUserRepository.delete(userDTO.getId());
+        userRepository.findByUserName(userName).ifPresent(userDTO -> {
+            userConfigurationRepository.deleteByUser(userName);
+            userRepository.delete(userDTO.getId());
             log.info("Deleted user {}", userDTO.getUserName());
         });
     }
 
     @Transactional
     public void newProtectionScheme(String userName, PasswordEncodingAlgorithm algorithm, CharSequence userPassword, Boolean removeOldSchemes) {
-        Optional<UserDTO> userMaybe = phaasUserRepository.findByUserName(userName);
+        Optional<UserDTO> userMaybe = userRepository.findByUserName(userName);
         userMaybe.ifPresent(userDTO -> {
-            phaasUserConfigurationRepository.findByUser(userName).forEach(config -> invalidateOrRemove(removeOldSchemes, config));
-            phaasUserConfigurationRepository.save(getUserConfigurationDTO(algorithm, userPassword, userDTO));
+            userConfigurationRepository.findByUser(userName).forEach(config -> invalidateOrRemove(removeOldSchemes, config));
+            userConfigurationRepository.save(getUserConfigurationDTO(algorithm, userPassword, userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
     }
 
     private void invalidateOrRemove(Boolean removeOldSchemes, UserConfigurationDTO config) {
         if(removeOldSchemes)  {
-            phaasUserConfigurationRepository.delete(config);
+            userConfigurationRepository.delete(config);
         } else {
-            phaasUserConfigurationRepository.save(config.setActive(false));
+            userConfigurationRepository.save(config.setActive(false));
         }
     }
 
     @Transactional
     public void create(UserDTO userDTO, UserConfigurationDTO...configurationDTO) {
-        UserDTO savedUser = phaasUserRepository.save(userDTO);
-        Stream.of(configurationDTO).forEach(phaasUserConfigurationRepository::save);
+        UserDTO savedUser = userRepository.save(userDTO);
+        Stream.of(configurationDTO).forEach(userConfigurationRepository::save);
         log.info("Created user: {}", savedUser.getUserName());
     }
 

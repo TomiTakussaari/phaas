@@ -49,12 +49,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
     @Autowired
-    private ApiUsersService apiUsersService;
+    private UsersService usersService;
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.eraseCredentials(false)
-                .userDetailsService(apiUsersService)
+                .userDetailsService(usersService)
                 .passwordEncoder(new BCryptPasswordEncoder());
     }
 

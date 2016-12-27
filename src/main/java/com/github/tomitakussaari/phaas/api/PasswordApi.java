@@ -4,7 +4,7 @@ import com.github.tomitakussaari.phaas.model.HashedPassword;
 import com.github.tomitakussaari.phaas.model.PasswordHashRequest;
 import com.github.tomitakussaari.phaas.model.PasswordVerifyRequest;
 import com.github.tomitakussaari.phaas.model.PasswordVerifyResult;
-import com.github.tomitakussaari.phaas.user.ApiUsersService;
+import com.github.tomitakussaari.phaas.user.UsersService;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import com.github.tomitakussaari.phaas.util.PasswordHasher;
 import com.github.tomitakussaari.phaas.util.PasswordVerifier;
@@ -31,14 +31,14 @@ public class PasswordApi {
     private final PasswordHasher passwordHasher;
 
     @ApiOperation(value = "Protects password and returns hash from it")
-    @Secured({ApiUsersService.USER_ROLE_VALUE})
+    @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
     public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         return passwordHasher.hash(request, userDetails.currentlyActiveCryptoData());
     }
 
     @ApiOperation(value = "Verifies given password against given hash")
-    @Secured({ApiUsersService.USER_ROLE_VALUE})
+    @Secured({UsersService.USER_ROLE_VALUE})
     @ApiResponses({
             @ApiResponse(code = 200, message = "Password was valid"),
             @ApiResponse(code = 422, message = "Password was not valid")

@@ -6,7 +6,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
-import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
+import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.USER;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.json;

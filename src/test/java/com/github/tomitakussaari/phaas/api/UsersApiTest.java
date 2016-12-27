@@ -1,6 +1,6 @@
 package com.github.tomitakussaari.phaas.api;
 
-import com.github.tomitakussaari.phaas.user.ApiUsersService;
+import com.github.tomitakussaari.phaas.user.UsersService;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Test;
@@ -11,9 +11,9 @@ import static org.mockito.Mockito.when;
 
 public class UsersApiTest {
 
-    private final ApiUsersService apiUsersService = Mockito.mock(ApiUsersService.class);
+    private final UsersService usersService = Mockito.mock(UsersService.class);
     private final Environment environment = Mockito.mock(Environment.class);
-    private final UsersApi usersApi = new UsersApi(apiUsersService, environment);
+    private final UsersApi usersApi = new UsersApi(usersService, environment);
 
     @Test
     public void equalsContractForPublicUser() {
@@ -38,6 +38,12 @@ public class UsersApiTest {
     public void schemeChangeCanBePreventedWithConfiguration() {
         when(environment.getProperty("immutable.users.db", Boolean.class)).thenReturn(true);
         usersApi.newProtectionScheme(null, null);
+    }
+
+    @Test(expected = OperationIsNotAvailableException.class)
+    public void passwordChangeCanBePreventedWithConfiguration() {
+        when(environment.getProperty("immutable.users.db", Boolean.class)).thenReturn(true);
+        usersApi.changePassword(null, null);
     }
 
 }

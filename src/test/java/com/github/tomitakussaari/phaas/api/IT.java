@@ -2,7 +2,7 @@ package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.Application;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
-import com.github.tomitakussaari.phaas.user.ApiUsersService;
+import com.github.tomitakussaari.phaas.user.UsersService;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.After;
 import org.junit.Before;
@@ -32,7 +32,7 @@ public abstract class IT {
     protected static final String USER_SIGNING_KEY = "test-sign-key";
 
     @Autowired
-    protected ApiUsersService apiUsersService;
+    protected UsersService usersService;
 
     @Value("${local.server.port}")
     int port;
@@ -42,12 +42,12 @@ public abstract class IT {
 
     @Before
     public void initialize() {
-        apiUsersService.createUser(USER_NAME, PasswordEncodingAlgorithm.SHA256_BCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD, USER_SIGNING_KEY);
+        usersService.createUser(USER_NAME, PasswordEncodingAlgorithm.SHA256_BCRYPT, Arrays.asList(UsersService.ROLE.ADMIN, UsersService.ROLE.USER), USER_PASSWORD, USER_SIGNING_KEY);
     }
 
     @After
     public void clearDb() {
-        apiUsersService.findAll().forEach(user -> apiUsersService.deleteUser(user.getUsername()));
+        usersService.findAll().forEach(user -> usersService.deleteUser(user.getUsername()));
     }
 
     private static class HttpBasicAuthFilter implements ClientRequestFilter {
@@ -62,7 +62,7 @@ public abstract class IT {
         return "Basic " + new String(Base64.encode((username+":"+password).getBytes()), StandardCharsets.US_ASCII);
     }
 
-    protected String createUserAndReturnPassword(String username, List<ApiUsersService.ROLE> roles) {
+    protected String createUserAndReturnPassword(String username, List<UsersService.ROLE> roles) {
         Map newUserResponse = authenticatedWebTarget().path("/users").request()
                 .post(json(of("userName", username, "algorithm", "SHA256_BCRYPT", "roles", roles)), Map.class);
         return (String) newUserResponse.get("generatedPassword");

@@ -1,7 +1,6 @@
 package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.user.SecurityConfig;
-import org.apache.commons.codec.digest.HmacUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -11,7 +10,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
+import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.USER;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.json;
@@ -35,13 +34,36 @@ public class UsersApiIntegrationTest extends IT {
     }
 
     @Test
+    public void changesPassword() {
+        Response updateResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
+        assertEquals(200, updateResponse.getStatus());
+        Response responseWithOldPassword = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
+        assertEquals(401, responseWithOldPassword.getStatus());
+        Response responseWithNewPassword = unAuthenticatedWebTarget().path("/users/me").request()
+                .header("Authorization", basicAuth(USER_NAME, "new-password")).accept(MediaType.APPLICATION_JSON).get();
+        assertEquals(200, responseWithNewPassword.getStatus());
+    }
+
+    @Test
+    public void changesResponseSigningKey() {
+        Response updateResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", USER_PASSWORD, "sharedSecretForSigningCommunication", "sign-key")));
+        assertEquals(200, updateResponse.getStatus());
+        Response response = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
+        validateResponseSignature(response, "sign-key");
+    }
+
+    @Test
     public void returnsResponseSignatureThatCanBeUsedToVerifyResponse() {
         Response response = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
+        validateResponseSignature(response, USER_SIGNING_KEY);
+    }
+
+    private void validateResponseSignature(Response response, String signKey) {
         String body = response.readEntity(String.class);
         String actualSignature = response.getHeaderString(SecurityConfig.HmacCalculationAdvice.X_RESPONSE_SIGN);
         String requestId = response.getHeaderString(SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID);
         String date = response.getHeaderString("date");
-        String expectedSignature = SecurityConfig.HmacCalculationAdvice.calculateSignature(requestId, USER_SIGNING_KEY, date, body);
+        String expectedSignature = SecurityConfig.HmacCalculationAdvice.calculateSignature(requestId, signKey, date, body);
         assertEquals(expectedSignature, actualSignature);
     }
 

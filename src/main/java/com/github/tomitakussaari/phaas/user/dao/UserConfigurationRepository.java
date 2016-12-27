@@ -5,7 +5,7 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.List;
 
 
-public interface PhaasUserConfigurationRepository extends CrudRepository<UserConfigurationDTO, Integer> {
+public interface UserConfigurationRepository extends CrudRepository<UserConfigurationDTO, Integer> {
 
     List<UserConfigurationDTO> findByUser(String userName);
     void deleteByUser(String userName);

@@ -20,26 +20,26 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm.SHA256_BCRYPT;
-import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
-import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
+import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.ADMIN;
+import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.USER;
 import static com.github.tomitakussaari.phaas.util.JsonHelper.objectMapSafely;
 
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 @Component
 @Slf4j
 class UsersFromEnvironment {
-    private final ApiUsersService apiUsersService;
+    private final UsersService usersService;
     private final Environment environment;
 
     @PostConstruct
     void initializeDatabase() {
         String usersConf = environment.getProperty("db.users.content");
         if (usersConf != null) {
-            UserData.deSerialize(usersConf).forEach(userData -> apiUsersService.create(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
+            UserData.deSerialize(usersConf).forEach(userData -> usersService.create(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
             log.info("Initialized user database from environment configuration");
-        } else if (!apiUsersService.hasUsers()) {
+        } else if (!usersService.hasUsers()) {
             String signingKey = RandomStringUtils.randomAlphabetic(20);
-            String password = apiUsersService.createUser("admin", SHA256_BCRYPT, Arrays.asList(ADMIN, USER), Optional.of(signingKey));
+            String password = usersService.createUser("admin", SHA256_BCRYPT, Arrays.asList(ADMIN, USER), Optional.of(signingKey));
             log.info("|*****| Created 'admin' user with password '{}' and signing key: '{}'", password, signingKey);
         }
     }

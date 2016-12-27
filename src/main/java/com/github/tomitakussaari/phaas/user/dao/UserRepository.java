@@ -4,7 +4,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
-public interface PhaasUserRepository extends CrudRepository<UserDTO, Integer> {
+public interface UserRepository extends CrudRepository<UserDTO, Integer> {
 
     Optional<UserDTO> findByUserName(String userName);
 
