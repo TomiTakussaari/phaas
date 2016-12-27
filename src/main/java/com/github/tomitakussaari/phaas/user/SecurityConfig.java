@@ -102,7 +102,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                       Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                       ServerHttpRequest request, ServerHttpResponse response) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
+            if (authentication != null && authentication.getPrincipal() instanceof PhaasUserDetails && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
                 PhaasUserDetails userDetails = (PhaasUserDetails) authentication.getPrincipal();
                 String responseTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
                 String bodyAsString = JsonHelper.serialize(body);
