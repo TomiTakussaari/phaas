@@ -42,7 +42,7 @@ public abstract class IT {
 
     @Before
     public void initialize() {
-        apiUsersService.createUser(USER_NAME, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD, USER_SIGNING_KEY);
+        apiUsersService.createUser(USER_NAME, PasswordEncodingAlgorithm.SHA256_BCRYPT, Arrays.asList(ApiUsersService.ROLE.ADMIN, ApiUsersService.ROLE.USER), USER_PASSWORD, USER_SIGNING_KEY);
     }
 
     @After
@@ -64,7 +64,7 @@ public abstract class IT {
 
     protected String createUserAndReturnPassword(String username, List<ApiUsersService.ROLE> roles) {
         Map newUserResponse = authenticatedWebTarget().path("/users").request()
-                .post(json(of("userName", username, "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", roles)), Map.class);
+                .post(json(of("userName", username, "algorithm", "SHA256_BCRYPT", "roles", roles)), Map.class);
         return (String) newUserResponse.get("generatedPassword");
     }
 

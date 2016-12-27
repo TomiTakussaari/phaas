@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
 public enum PasswordEncodingAlgorithm {
-    DEFAULT_SHA256ANDBCRYPT(SHA256AndBCryptPasswordEncoder::new);
+    SHA256_BCRYPT(SHA256AndBCryptPasswordEncoder::new);
 
     private final Supplier<PasswordEncoder> supplier;
 
@@ -22,6 +22,10 @@ public enum PasswordEncodingAlgorithm {
 }
 
 class SHA256AndBCryptPasswordEncoder extends BCryptPasswordEncoder {
+
+    SHA256AndBCryptPasswordEncoder() {
+        super(12);
+    }
 
     @Override
     public String encode(CharSequence rawPassword) {

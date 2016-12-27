@@ -2,6 +2,7 @@ package com.github.tomitakussaari.phaas.model;
 
 import lombok.*;
 import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RequiredArgsConstructor
@@ -16,7 +17,7 @@ public class DataProtectionScheme {
     @NonNull
     private final PasswordEncodingAlgorithm algorithm;
     @NonNull
-    private final String protectedEncryptionKey;
+    private final String encryptedKeyWithSalt;
 
     public PasswordEncoder passwordEncoder() {
         return algorithm.encoder();
@@ -41,14 +42,18 @@ public class DataProtectionScheme {
         }
 
         public String dataProtectionKey() {
-            return Encryptors.text(userPassword, salt()).decrypt(cryptPassword());
+            return encryptor(userPassword, saltPart()).decrypt(passwordPart());
         }
-        private String salt() {
-            return scheme.protectedEncryptionKey.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[0];
+        private String saltPart() {
+            return scheme.encryptedKeyWithSalt.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[0];
         }
 
-        private String cryptPassword() {
-            return scheme.protectedEncryptionKey.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
+        private String passwordPart() {
+            return scheme.encryptedKeyWithSalt.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
+        }
+
+        public static TextEncryptor encryptor(CharSequence password, String salt) {
+            return Encryptors.text(password, salt);
         }
     }
 

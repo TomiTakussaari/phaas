@@ -1,5 +1,6 @@
 package com.github.tomitakussaari.phaas.user;
 
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.dao.PhaasUserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.PhaasUserRepository;
@@ -14,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
@@ -108,9 +108,8 @@ public class ApiUsersService implements UserDetailsService {
     private String createEncryptionKey(CharSequence password) {
         String salt = KeyGenerators.string().generateKey();
         String encryptionKey = RandomStringUtils.random(30);
-        TextEncryptor encryptor = Encryptors.text(password, salt);
-        String encryptedKey = encryptor.encrypt(encryptionKey);
-        return salt + TOKEN_VALUE_SEPARATOR + encryptedKey;
+        TextEncryptor encryptor = DataProtectionScheme.CryptoData.encryptor(password, salt);
+        return salt + TOKEN_VALUE_SEPARATOR + encryptor.encrypt(encryptionKey);
     }
 
     private UserConfigurationDTO getUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, CharSequence password, UserDTO userDTO) {

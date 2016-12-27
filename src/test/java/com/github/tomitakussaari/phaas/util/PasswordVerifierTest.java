@@ -17,8 +17,8 @@ public class PasswordVerifierTest {
     private final String password = "password";
     private final String encryptionKey = "encryption_key";
     private final String encryptionKeyTwo= "encryption_key2";
-    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, salt+"."+Encryptors.text(password, salt).encrypt(encryptionKey));
-    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT, salt+"."+Encryptors.text(password, salt).encrypt(encryptionKeyTwo));
+    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, salt+"."+Encryptors.text(password, salt).encrypt(encryptionKey));
+    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, salt+"."+Encryptors.text(password, salt).encrypt(encryptionKeyTwo));
     private final DataProtectionScheme.CryptoData decryptedCurrentProtectionScheme = currentDataProtectionScheme.decryptedProtectionScheme(password);
     private final DataProtectionScheme.CryptoData decryptedNewProtectionScheme = newDataProtectionScheme.decryptedProtectionScheme(password);
 

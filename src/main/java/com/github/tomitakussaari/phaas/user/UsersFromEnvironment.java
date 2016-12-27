@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT;
+import static com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm.SHA256_BCRYPT;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.ADMIN;
 import static com.github.tomitakussaari.phaas.user.ApiUsersService.ROLE.USER;
 import static com.github.tomitakussaari.phaas.util.JsonHelper.objectMapSafely;
@@ -39,7 +39,7 @@ class UsersFromEnvironment {
             log.info("Initialized user database from environment configuration");
         } else if (!apiUsersService.hasUsers()) {
             String signingKey = RandomStringUtils.randomAlphabetic(20);
-            String password = apiUsersService.createUser("admin", DEFAULT_SHA256ANDBCRYPT, Arrays.asList(ADMIN, USER), Optional.of(signingKey));
+            String password = apiUsersService.createUser("admin", SHA256_BCRYPT, Arrays.asList(ADMIN, USER), Optional.of(signingKey));
             log.info("|*****| Created 'admin' user with password '{}' and signing key: '{}'", password, signingKey);
         }
     }

@@ -38,7 +38,7 @@ public class DataProtectionApiIntegrationTest extends IT {
     @Test
     public void jwtWithPreviousProtectionSchemeIsStillValid() {
         String token = authenticatedWebTarget().path("/data-protection/token").request().post(json(ImmutableMap.of("algorithm", "HS256", "claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), String.class);
-        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT")));
+        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "SHA256_BCRYPT")));
         assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
         authenticatedWebTarget().path("/data-protection/token").request().put(json(ImmutableMap.of("token", token, "requiredClaims", ImmutableMap.of("my-claim", "is-true"))), Map.class);
     }

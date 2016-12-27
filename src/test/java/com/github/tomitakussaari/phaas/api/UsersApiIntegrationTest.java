@@ -28,7 +28,7 @@ public class UsersApiIntegrationTest extends IT {
     @Test
     public void updatesProtectionScheme() {
         Map currentUserWithOldScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
-        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "DEFAULT_SHA256ANDBCRYPT")));
+        Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "SHA256_BCRYPT")));
         assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
         Map currentUserWithNewScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
         assertNotEquals(currentUserWithOldScheme, currentUserWithNewScheme);
@@ -48,7 +48,7 @@ public class UsersApiIntegrationTest extends IT {
     private void validateUser(Map currentUser) {
         assertEquals(USER_NAME, currentUser.get("userName"));
         assertThat((Iterable<String>) currentUser.get("roles"), Matchers.containsInAnyOrder("ADMIN", "USER"));
-        assertEquals("DEFAULT_SHA256ANDBCRYPT", ((Map) currentUser.get("currentProtectionScheme")).get("algorithm"));
+        assertEquals("SHA256_BCRYPT", ((Map) currentUser.get("currentProtectionScheme")).get("algorithm"));
         assertNotNull(((Map) currentUser.get("currentProtectionScheme")).get("algorithm"));
     }
 
@@ -86,14 +86,14 @@ public class UsersApiIntegrationTest extends IT {
     public void nonAdminUserCannotCreateNewUsers() {
         String password = createUserAndReturnPassword("user3", singletonList(USER));
 
-        Response accessDenied = unAuthenticatedWebTarget().path("/users").request().header("Authorization", basicAuth("user3", password)).post(json(of("userName", "user4", "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", singletonList(USER))));
+        Response accessDenied = unAuthenticatedWebTarget().path("/users").request().header("Authorization", basicAuth("user3", password)).post(json(of("userName", "user4", "algorithm", "SHA256_BCRYPT", "roles", singletonList(USER))));
         assertEquals(401, accessDenied.getStatus());
         assertEquals("No access", accessDenied.readEntity(Map.class).get("message"));
     }
 
     @Test
     public void unAuthenticatedCannotCreateNewUsers() {
-        Response accessDenied = unAuthenticatedWebTarget().path("/users").request().post(json(of("userName", "user4", "algorithm", "DEFAULT_SHA256ANDBCRYPT", "roles", singletonList(USER))));
+        Response accessDenied = unAuthenticatedWebTarget().path("/users").request().post(json(of("userName", "user4", "algorithm", "SHA256_BCRYPT", "roles", singletonList(USER))));
         assertEquals(401, accessDenied.getStatus());
         assertEquals("Full authentication is required to access this resource", accessDenied.readEntity(Map.class).get("message"));
     }

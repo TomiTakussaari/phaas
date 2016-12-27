@@ -25,10 +25,10 @@ public class UsersFromEnvironmentTest {
     private final Environment environment = Mockito.mock(Environment.class);
     private final ApiUsersService apiUsersService = Mockito.mock(ApiUsersService.class);
 
-    private final String serializedFrom = "[{\"userDTO\":{\"id\":3,\"userName\":\"username\",\"passwordHash\":\"$2a$10$AmFDaMGXu3LHgCivgoli0Op6RmTIWn1xWjF0qy/e5UjvzxGmcGRm6\",\"roles\":\"ROLE_ADMIN, ROLE_USER\",\"sharedSecretForSigningCommunication\":\"my-shared-secret\"},\"userConfigurationDTOs\":[{\"id\":1,\"user\":\"username\",\"dataProtectionKey\":\"old-data-protection-key\",\"active\":false,\"algorithm\":\"DEFAULT_SHA256ANDBCRYPT\"},{\"id\":2,\"user\":\"username\",\"dataProtectionKey\":\"new-data-protection-key\",\"active\":true,\"algorithm\":\"DEFAULT_SHA256ANDBCRYPT\"}]}]";
+    private final String serializedFrom = "[{\"userDTO\":{\"id\":3,\"userName\":\"username\",\"passwordHash\":\"$2a$10$AmFDaMGXu3LHgCivgoli0Op6RmTIWn1xWjF0qy/e5UjvzxGmcGRm6\",\"roles\":\"ROLE_ADMIN, ROLE_USER\",\"sharedSecretForSigningCommunication\":\"my-shared-secret\"},\"userConfigurationDTOs\":[{\"id\":1,\"user\":\"username\",\"dataProtectionKey\":\"old-data-protection-key\",\"active\":false,\"algorithm\":\"SHA256_BCRYPT\"},{\"id\":2,\"user\":\"username\",\"dataProtectionKey\":\"new-data-protection-key\",\"active\":true,\"algorithm\":\"SHA256_BCRYPT\"}]}]";
     private final UserDTO userDTO = new UserDTO(3, "username", "$2a$10$AmFDaMGXu3LHgCivgoli0Op6RmTIWn1xWjF0qy/e5UjvzxGmcGRm6", "ROLE_ADMIN, ROLE_USER", "my-shared-secret");
-    private final UserConfigurationDTO configurationDTO1 = new UserConfigurationDTO(1, userDTO.getUserName(), "old-data-protection-key", false, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT);
-    private final UserConfigurationDTO configurationDTO2 = new UserConfigurationDTO(2, userDTO.getUserName(), "new-data-protection-key", true, PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT);
+    private final UserConfigurationDTO configurationDTO1 = new UserConfigurationDTO(1, userDTO.getUserName(), "old-data-protection-key", false, PasswordEncodingAlgorithm.SHA256_BCRYPT);
+    private final UserConfigurationDTO configurationDTO2 = new UserConfigurationDTO(2, userDTO.getUserName(), "new-data-protection-key", true, PasswordEncodingAlgorithm.SHA256_BCRYPT);
     private final UsersFromEnvironment.UserData dataFromDTOs = new UsersFromEnvironment.UserData(userDTO, configurationDTO1, configurationDTO2);
 
     @Test
@@ -52,10 +52,10 @@ public class UsersFromEnvironmentTest {
     @Test
     public void createsAdminUserIfUserDatabaseIsEmptyAndEnvironmentDoesNotDefineUsers() {
         when(apiUsersService.hasUsers()).thenReturn(false);
-        when(apiUsersService.createUser(eq("admin"), eq(PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT), eq(asList(ADMIN, USER)), argThat(new OptionaIsPresentMatcher<>()))).thenReturn("password");
+        when(apiUsersService.createUser(eq("admin"), eq(PasswordEncodingAlgorithm.SHA256_BCRYPT), eq(asList(ADMIN, USER)), argThat(new OptionaIsPresentMatcher<>()))).thenReturn("password");
         UsersFromEnvironment usersFromEnvironment = new UsersFromEnvironment(apiUsersService, environment);
         usersFromEnvironment.initializeDatabase();
-        verify(apiUsersService).createUser(eq("admin"), eq(PasswordEncodingAlgorithm.DEFAULT_SHA256ANDBCRYPT), eq(asList(ADMIN, USER)), argThat(new OptionaIsPresentMatcher<>()));
+        verify(apiUsersService).createUser(eq("admin"), eq(PasswordEncodingAlgorithm.SHA256_BCRYPT), eq(asList(ADMIN, USER)), argThat(new OptionaIsPresentMatcher<>()));
     }
 
     @Test
