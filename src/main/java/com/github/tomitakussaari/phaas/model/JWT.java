@@ -4,9 +4,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 
 import java.util.Map;
 
+@UtilityClass
 public class JWT {
 
     @RequiredArgsConstructor
