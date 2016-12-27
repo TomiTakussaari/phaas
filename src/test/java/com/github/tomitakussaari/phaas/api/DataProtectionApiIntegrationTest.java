@@ -1,10 +1,14 @@
 package com.github.tomitakussaari.phaas.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import io.jsonwebtoken.CompressionCodecs;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.Base64;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -20,6 +24,22 @@ public class DataProtectionApiIntegrationTest extends IT {
         Map response = authenticatedWebTarget().path("/data-protection/token").request().put(json(ImmutableMap.of("token", token)), Map.class);
         assertEquals("value1", response.get("claim1"));
         assertEquals("value2", response.get("claim2"));
+    }
+
+    @Test
+    public void noticesMangledDataInJWTToken() throws IOException {
+        String token = authenticatedWebTarget().path("/data-protection/token").request().post(json(ImmutableMap.of("algorithm", "HS256", "claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), String.class);
+        String dataB64 = token.split("\\.")[1];
+        String data = new String(CompressionCodecs.DEFLATE.decompress(Base64.getUrlDecoder().decode(dataB64)));
+        Map dataMap = new ObjectMapper().readValue(data, Map.class);
+        dataMap.put("claim1", "new-value");
+        byte[] bytes = new ObjectMapper().writeValueAsString(dataMap).getBytes();
+        String newData = new String(Base64.getUrlEncoder().encode(CompressionCodecs.DEFLATE.compress(bytes)));
+        String newToken = token.split("\\.")[0] + "." + newData + "." + token.split("\\.")[2];
+        Response response = authenticatedWebTarget().path("/data-protection/token").request().put(json(ImmutableMap.of("token", newToken, "requiredClaims", ImmutableMap.of())));
+        assertEquals(422, response.getStatus());
+        assertEquals("JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.", response.readEntity(Map.class).get("message"));
+
     }
 
     @Test
@@ -47,7 +67,7 @@ public class DataProtectionApiIntegrationTest extends IT {
     public void failsWhenJWTDoesNotContainWantedClaim() {
         String token = authenticatedWebTarget().path("/data-protection/token").request().post(json(ImmutableMap.of("algorithm", "HS256", "claims", ImmutableMap.of("claim1", "value1"))), String.class);
         Response response = authenticatedWebTarget().path("/data-protection/token").request().put(json(ImmutableMap.of("token", token, "requiredClaims", ImmutableMap.of("my-claim", "is-true"))));
-        assertEquals(400, response.getStatus());
+        assertEquals(422, response.getStatus());
         assertEquals("Expected my-claim claim to be: is-true, but was not present in the JWT claims.", response.readEntity(Map.class).get("message"));
     }
 

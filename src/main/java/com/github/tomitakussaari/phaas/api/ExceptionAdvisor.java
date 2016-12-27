@@ -42,7 +42,7 @@ public class ExceptionAdvisor {
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ErrorMessage> jwtError(JwtException e) {
         log.warn("JWT error: " + e.getMessage(), e);
-        return responseEntity(e.getMessage(), e, HttpStatus.BAD_REQUEST);
+        return responseEntity(e.getMessage(), e, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(Exception.class)

@@ -9,8 +9,11 @@ import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
 import com.github.tomitakussaari.phaas.util.PasswordHasher;
 import com.github.tomitakussaari.phaas.util.PasswordVerifier;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,9 +39,14 @@ public class PasswordApi {
 
     @ApiOperation(value = "Verifies given password against given hash")
     @Secured({ApiUsersService.USER_ROLE_VALUE})
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Password was valid"),
+            @ApiResponse(code = 422, message = "Password was not valid")
+    })
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
-    public PasswordVerifyResult verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
-        return passwordVerifier.verify(request, userDetails.cryptoDataForId(request.schemeId()), userDetails.currentlyActiveCryptoData());
+    public ResponseEntity<PasswordVerifyResult> verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
+        PasswordVerifyResult result = passwordVerifier.verify(request, userDetails.cryptoDataForId(request.schemeId()), userDetails.currentlyActiveCryptoData());
+        return result.isValid() ? ResponseEntity.ok(result) : ResponseEntity.unprocessableEntity().body(result);
     }
 
 

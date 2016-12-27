@@ -3,7 +3,6 @@ package com.github.tomitakussaari.phaas.api;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
@@ -25,7 +24,7 @@ public class PasswordApiIntegrationTest extends IT {
     }
 
     @Test
-    public void cannotVerifyPassowrdProtectedByOtherUser() {
+    public void cannotVerifyPasswordProtectedByOtherUser() {
         String password = createUserAndReturnPassword("otheruser", singletonList(USER));
         Map hashedPassword = unAuthenticatedWebTarget().path("/passwords/hash").request().header("Authorization", basicAuth("otheruser", password)).put(json(of("rawPassword", PASSWORD)), Map.class);
 
@@ -71,7 +70,9 @@ public class PasswordApiIntegrationTest extends IT {
     @Test
     public void noticesInvalidPassword() {
         Map hashedPassword = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
-        Map verifyResponse = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", "wrong-password", "hash", hashedPassword.get("hash"))), Map.class);
+        Response response = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", "wrong-password", "hash", hashedPassword.get("hash"))));
+        assertEquals(422, response.getStatus());
+        Map verifyResponse = response.readEntity(Map.class);
         assertFalse((boolean) verifyResponse.get("valid"));
     }
 
