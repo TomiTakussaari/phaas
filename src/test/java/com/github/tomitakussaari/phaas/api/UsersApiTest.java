@@ -16,6 +16,13 @@ public class UsersApiTest {
     private final UsersApi usersApi = new UsersApi(usersService, environment);
 
     @Test
+    public void equalsContractForNewPasswordRequest() {
+        EqualsVerifier.forClass(UsersApi.NewPasswordRequest.class)
+                .suppress(Warning.NONFINAL_FIELDS, Warning.NULL_FIELDS, Warning.STRICT_INHERITANCE)
+                .verify();
+    }
+
+    @Test
     public void equalsContractForPublicUser() {
         EqualsVerifier.forClass(UsersApi.PublicUser.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.NULL_FIELDS, Warning.STRICT_INHERITANCE)
