@@ -1,5 +1,6 @@
 package com.github.tomitakussaari.phaas.user.dao;
 
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.function.Function;
 
 @Entity
 @Table(name = "user_configuration")
@@ -25,5 +27,8 @@ public final class UserConfigurationDTO implements Serializable {
     private boolean active;
     private PasswordEncodingAlgorithm algorithm;
 
+    public DataProtectionScheme toProtectionScheme() {
+        return new DataProtectionScheme(getId(), getAlgorithm(), getDataProtectionKey());
+    }
 
 }

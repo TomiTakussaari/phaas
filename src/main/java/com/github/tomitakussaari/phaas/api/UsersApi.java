@@ -35,12 +35,12 @@ public class UsersApi {
         return toPublicUser(userDetails);
     }
 
-    @ApiOperation(value = "Returns information about current user")
+    @ApiOperation(value = "Changes user password.")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, produces = "application/json", path = "/me")
     public void changePassword(@RequestBody NewPasswordRequest newPasswordRequest, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
         rejectIfUserDatabaseIsImmutable();
-        usersService.changePasswordAndSecret(userDetails.getUsername(), newPasswordRequest.getPassword(), newPasswordRequest.getSharedSecretForSigningCommunication());
+        usersService.changePasswordAndSecret(userDetails.getUsername(), newPasswordRequest.getPassword(), userDetails.findCurrentUserPassword(), newPasswordRequest.getSharedSecretForSigningCommunication());
     }
 
     @ApiOperation(value = "Creates new user, only usable by admins")

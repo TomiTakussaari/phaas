@@ -9,4 +9,6 @@ public interface UserConfigurationRepository extends CrudRepository<UserConfigur
 
     List<UserConfigurationDTO> findByUser(String userName);
     void deleteByUser(String userName);
+    UserConfigurationDTO findByUserAndActive(String userName, boolean active);
+
 }

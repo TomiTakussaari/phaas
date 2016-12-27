@@ -25,18 +25,18 @@ public class PhaasUserDetails implements UserDetails {
 
     public DataProtectionScheme activeProtectionScheme() {
         return configurations.stream().filter(UserConfigurationDTO::isActive).findFirst()
-                .map(toProtectionScheme())
+                .map(UserConfigurationDTO::toProtectionScheme)
                 .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find active encryption key for user: " + getUsername()));
     }
 
     public DataProtectionScheme protectionScheme(int id) {
         return configurations.stream().filter(config -> config.getId().equals(id)).findFirst()
-                .map(toProtectionScheme())
+                .map(UserConfigurationDTO::toProtectionScheme)
                 .orElseThrow(() -> new ProtectionSchemeNotFoundException("Unable to find encryption key by id: " + id));
     }
 
     public List<DataProtectionScheme> protectionSchemes() {
-        return configurations.stream().map(toProtectionScheme()).collect(toList());
+        return configurations.stream().map(UserConfigurationDTO::toProtectionScheme).collect(toList());
     }
 
     public CharSequence findCurrentUserPassword() {
@@ -53,10 +53,6 @@ public class PhaasUserDetails implements UserDetails {
 
     public CryptoData cryptoDataForId(int schemeId) {
         return protectionScheme(schemeId).decryptedProtectionScheme(findCurrentUserPassword());
-    }
-
-    private Function<UserConfigurationDTO, DataProtectionScheme> toProtectionScheme() {
-        return activeConfig -> new DataProtectionScheme(activeConfig.getId(), activeConfig.getAlgorithm(), activeConfig.getDataProtectionKey());
     }
 
     @Override

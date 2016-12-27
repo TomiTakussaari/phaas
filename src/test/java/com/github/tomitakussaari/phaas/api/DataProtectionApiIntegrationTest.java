@@ -27,6 +27,20 @@ public class DataProtectionApiIntegrationTest extends IT {
     }
 
     @Test
+    public void jsonWebTokenCanBeValidatedAfterPasswordChange() {
+        String token = authenticatedWebTarget().path("/data-protection/token").request().post(json(ImmutableMap.of("algorithm", "HS256", "claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), String.class);
+
+        Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
+        assertEquals(200, passwordChangeResponse.getStatus());
+
+        Map response = unAuthenticatedWebTarget().path("/data-protection/token").request()
+                .header("Authorization", basicAuth(USER_NAME, "new-password"))
+                .put(json(ImmutableMap.of("token", token)), Map.class);
+        assertEquals("value1", response.get("claim1"));
+        assertEquals("value2", response.get("claim2"));
+    }
+
+    @Test
     public void noticesMangledDataInJWTToken() throws IOException {
         String token = authenticatedWebTarget().path("/data-protection/token").request().post(json(ImmutableMap.of("algorithm", "HS256", "claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), String.class);
         String dataB64 = token.split("\\.")[1];

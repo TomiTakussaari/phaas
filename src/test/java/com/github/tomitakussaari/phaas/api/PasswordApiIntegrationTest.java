@@ -3,6 +3,7 @@ package com.github.tomitakussaari.phaas.api;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 
@@ -41,6 +42,20 @@ public class PasswordApiIntegrationTest extends IT {
 
         Map verifyResponse = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPasswordWithOldScheme.get("hash"))), Map.class);
         assertTrue((boolean) verifyResponse.get("valid"));
+    }
+
+    @Test
+    public void passwordChangeDoesNotInvalidateOldPasswordHashes() {
+        Map hashedPassword = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
+
+        Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
+        assertEquals(200, passwordChangeResponse.getStatus());
+
+        Response response = unAuthenticatedWebTarget().path("/passwords/verify").request()
+                .header("Authorization", basicAuth(USER_NAME, "new-password"))
+                .put(json(of("passwordCandidate", PASSWORD, "hash", hashedPassword.get("hash"))));
+        assertEquals(200, response.getStatus());
+        assertTrue((boolean) response.readEntity(Map.class).get("valid"));
     }
 
     @Test

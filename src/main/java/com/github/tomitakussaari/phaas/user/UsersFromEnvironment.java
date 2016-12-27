@@ -35,7 +35,7 @@ class UsersFromEnvironment {
     void initializeDatabase() {
         String usersConf = environment.getProperty("db.users.content");
         if (usersConf != null) {
-            UserData.deSerialize(usersConf).forEach(userData -> usersService.create(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
+            UserData.deSerialize(usersConf).forEach(userData -> usersService.save(userData.getUserDTO(), userData.getUserConfigurationDTOs()));
             log.info("Initialized user database from environment configuration");
         } else if (!usersService.hasUsers()) {
             String signingKey = RandomStringUtils.randomAlphabetic(20);

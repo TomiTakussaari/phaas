@@ -37,7 +37,7 @@ public class UsersFromEnvironmentTest {
         UsersFromEnvironment usersFromEnvironment = new UsersFromEnvironment(usersService, environment);
         usersFromEnvironment.initializeDatabase();
 
-        verify(usersService).create(userDTO, configurationDTO1, configurationDTO2);
+        verify(usersService).save(userDTO, configurationDTO1, configurationDTO2);
     }
 
     @Test
