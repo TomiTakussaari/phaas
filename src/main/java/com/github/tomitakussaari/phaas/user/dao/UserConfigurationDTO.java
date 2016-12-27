@@ -9,7 +9,6 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.function.Function;
 
 @Entity
 @Table(name = "user_configuration")
