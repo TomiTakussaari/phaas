@@ -2,7 +2,11 @@ package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.model.ProtectionSchemeNotFoundException;
 import com.github.tomitakussaari.phaas.user.SecurityConfig;
-import lombok.*;
+import io.jsonwebtoken.JwtException;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -33,6 +37,12 @@ public class ExceptionAdvisor {
     public ResponseEntity<ErrorMessage> operationNotAvailable(OperationIsNotAvailableException e) {
         log.info("Tried to do operation that is not available", e);
         return responseEntity("Disabled", e, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorMessage> jwtError(JwtException e) {
+        log.warn("JWT error: " + e.getMessage(), e);
+        return responseEntity(e.getMessage(), e, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
