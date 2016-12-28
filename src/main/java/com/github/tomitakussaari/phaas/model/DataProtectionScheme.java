@@ -44,6 +44,7 @@ public class DataProtectionScheme {
         public String dataProtectionKey() {
             return encryptor(userPassword, saltPart()).decrypt(passwordPart());
         }
+
         private String saltPart() {
             return scheme.encryptedKeyWithSalt.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[0];
         }

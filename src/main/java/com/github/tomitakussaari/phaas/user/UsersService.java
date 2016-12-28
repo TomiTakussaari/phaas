@@ -1,6 +1,5 @@
 package com.github.tomitakussaari.phaas.user;
 
-import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserRepository;
@@ -15,7 +14,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.CryptoData.encryptor;
 import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_VALUE_SEPARATOR;
 import static java.util.stream.Collectors.joining;
 
@@ -69,24 +68,21 @@ public class UsersService implements UserDetailsService {
                 sharedSecretForSigningCommunication);
 
         String encryptionKey = RandomStringUtils.randomAlphanumeric(30);
-        UserConfigurationDTO configurationDTO = getUserConfigurationDTO(algorithm, userPassword, encryptionKey, userDTO);
+        UserConfigurationDTO configurationDTO = createUserConfigurationDTO(algorithm, userPassword, encryptionKey, userDTO);
         save(userDTO, configurationDTO);
         return userPassword;
     }
 
     @Transactional
     public void changePasswordAndSecret(String userName, CharSequence newPassword, CharSequence oldPassword, Optional<String> sharedSecretForSigningCommunication) {
-        Optional<UserDTO> updatedUserMaybe = userRepository.findByUserName(userName)
-                .map(user -> user.setPasswordHash(passwordEncoder().encode(newPassword)))
-                .map(user -> sharedSecretForSigningCommunication.map(user::setSharedSecretForSigningCommunication).orElse(user));
+        userRepository.findByUserName(userName).ifPresent(user -> {
+            user.setPasswordHash(passwordEncoder().encode(newPassword));
+            sharedSecretForSigningCommunication.ifPresent(user::setSharedSecretForSigningCommunication);
 
-        updatedUserMaybe.ifPresent(user -> {
-            List<UserConfigurationDTO> configs = userConfigurationRepository.findByUser(user.getUserName());
-            List<UserConfigurationDTO> newConfigs = configs.stream().map(config -> {
-                String protectionKey = config.toProtectionScheme().decryptedProtectionScheme(oldPassword).dataProtectionKey();
-                UserConfigurationDTO newConfig = getUserConfigurationDTO(config.getAlgorithm(), newPassword, protectionKey, user);
-                newConfig.setId(config.getId());
-                return newConfig;
+            List<UserConfigurationDTO> currentConfigs = userConfigurationRepository.findByUser(user.getUserName());
+            List<UserConfigurationDTO> newConfigs = currentConfigs.stream().map(currentConfig -> {
+                String protectionKey = currentConfig.toProtectionScheme().decryptedProtectionScheme(oldPassword).dataProtectionKey();
+                return createUserConfigurationDTO(currentConfig.getAlgorithm(), newPassword, protectionKey, user).setId(currentConfig.getId());
             }).collect(Collectors.toList());
 
             save(user, newConfigs.toArray(new UserConfigurationDTO[]{}));
@@ -95,7 +91,7 @@ public class UsersService implements UserDetailsService {
     }
 
     private BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(11);
+        return new BCryptPasswordEncoder(10);
     }
 
     @Transactional
@@ -113,7 +109,7 @@ public class UsersService implements UserDetailsService {
         userMaybe.ifPresent(userDTO -> {
             String encryptionKey = RandomStringUtils.randomAlphanumeric(30);
             userConfigurationRepository.findByUser(userName).forEach(config -> invalidateOrRemove(removeOldSchemes, config));
-            userConfigurationRepository.save(getUserConfigurationDTO(algorithm, userPassword, encryptionKey, userDTO));
+            userConfigurationRepository.save(createUserConfigurationDTO(algorithm, userPassword, encryptionKey, userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
     }
@@ -133,17 +129,16 @@ public class UsersService implements UserDetailsService {
         log.info("Saved user: {}", savedUser.getUserName());
     }
 
-    private String createEncryptionKey(CharSequence password, String encryptionKey) {
+    private String protectEncryptionKey(CharSequence password, String encryptionKey) {
         String salt = KeyGenerators.string().generateKey();
 
-        TextEncryptor encryptor = DataProtectionScheme.CryptoData.encryptor(password, salt);
-        return salt + TOKEN_VALUE_SEPARATOR + encryptor.encrypt(encryptionKey);
+        return salt + TOKEN_VALUE_SEPARATOR + encryptor(password, salt).encrypt(encryptionKey);
     }
 
-    private UserConfigurationDTO getUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, CharSequence password, String encryptionKey, UserDTO userDTO) {
+    private UserConfigurationDTO createUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, CharSequence password, String encryptionKey, UserDTO userDTO) {
         return new UserConfigurationDTO()
                 .setActive(true).setAlgorithm(algorithm).setUser(userDTO.getUserName())
-                .setDataProtectionKey(createEncryptionKey(password, encryptionKey));
+                .setDataProtectionKey(protectEncryptionKey(password, encryptionKey));
     }
 
     private String generatePassword() {
