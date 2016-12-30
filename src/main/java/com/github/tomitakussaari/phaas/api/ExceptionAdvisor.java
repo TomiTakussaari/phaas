@@ -2,7 +2,8 @@ package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.model.ProtectionSchemeNotFoundException;
 import com.github.tomitakussaari.phaas.user.SecurityConfig;
-import io.jsonwebtoken.JwtException;
+import com.github.tomitakussaari.phaas.util.JwtHelper;
+import com.github.tomitakussaari.phaas.util.JwtHelper.JWTException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,12 +40,6 @@ public class ExceptionAdvisor {
         return responseEntity("Disabled", e, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
-    @ExceptionHandler(JwtException.class)
-    public ResponseEntity<ErrorMessage> jwtError(JwtException e) {
-        log.warn("JWT error: " + e.getMessage(), e);
-        return responseEntity(e.getMessage(), e, HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> genericError(Exception e) {
         log.warn("Generic error: " + e.getMessage(), e);
@@ -58,9 +53,14 @@ public class ExceptionAdvisor {
     }
 
     @ExceptionHandler(ProtectionSchemeNotFoundException.class)
-    public ResponseEntity<ErrorMessage> accessDenied(ProtectionSchemeNotFoundException e) {
+    public ResponseEntity<ErrorMessage> protectionSchemeWasNotFound(ProtectionSchemeNotFoundException e) {
         log.warn("DataProtectionScheme was not found: " + e.getMessage(), e);
         return responseEntity("DataProtectionScheme was not found", e, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(JWTException.class)
+    public ResponseEntity<ErrorMessage> jwtParseProblem(JWTException e) {
+        return responseEntity(e.getMessage(), e, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     private ResponseEntity<ErrorMessage> responseEntity(String message, Exception e, HttpStatus status) {

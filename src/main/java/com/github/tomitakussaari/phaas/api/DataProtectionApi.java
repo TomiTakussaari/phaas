@@ -1,180 +1,34 @@
 package com.github.tomitakussaari.phaas.api;
 
 
-import com.github.tomitakussaari.phaas.model.*;
 import com.github.tomitakussaari.phaas.model.JWT.JwtCreateRequest;
 import com.github.tomitakussaari.phaas.model.JWT.JwtParseRequest;
 import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
-import io.jsonwebtoken.*;
+import com.github.tomitakussaari.phaas.util.JwtHelper;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.codec.digest.HmacUtils;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
-import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.crypto.spec.SecretKeySpec;
-import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
-
-import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_VALUE_SEPARATOR;
 
 @RestController
 @RequestMapping("/data-protection")
 public class DataProtectionApi {
 
-    private static final String JWT_SCHEME_ID_HEADER_PARAM = "phaas-scheme-id";
-
-    @ApiOperation(value = "Creates JWT", consumes = "application/json")
+    @ApiOperation(value = "Creates token with given claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.POST, path = "/token")
     public String generateJWT(@RequestBody JwtCreateRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
-        DataProtectionScheme.CryptoData cryptoData = userDetails.currentlyActiveCryptoData();
-        SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(createRequest.getAlgorithm().name());
-        return Jwts.builder()
-                .setClaims(createRequest.getClaims())
-                .setIssuedAt(new Date())
-                .setHeaderParam(JWT_SCHEME_ID_HEADER_PARAM, cryptoData.getScheme().getId())
-                .signWith(algorithm, createKeySpec(algorithm, userDetails.currentlyActiveCryptoData()))
-                .compressWith(CompressionCodecs.DEFLATE).compact();
-
+        return JwtHelper.generate(userDetails, createRequest.getClaims());
     }
 
-    @ApiOperation(value = "Verifies JWT and returns payload", consumes = "application/json")
+    @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.PUT, path = "/token")
     public Map<String, Object> parseJwt(@RequestBody JwtParseRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
-        Jws<Claims> jws = getJwtParser(userDetails, parseRequest).parseClaimsJws(parseRequest.getToken());
-        Map<String, Object> body = new HashMap<>(jws.getBody());
-        body.remove(JWT_SCHEME_ID_HEADER_PARAM);
-        return body;
-    }
-
-
-    @ApiOperation(value = "Calculates HMAC for given message", consumes = "text/plain")
-    @RequestMapping(method = RequestMethod.POST, path = "/hmac")
-    public String calculateHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String message) {
-        DataProtectionScheme dataProtectionScheme = userDetails.activeProtectionScheme();
-        return dataProtectionScheme.getId() + TOKEN_VALUE_SEPARATOR + HmacUtils.hmacSha512Hex(userDetails.cryptoDataForId(dataProtectionScheme.getId()).dataProtectionKey(), message);
-    }
-
-    @ApiOperation(value = "Verifies that given HMAC is valid for message")
-    @ApiResponses({
-            @ApiResponse(code = 204, message = "Hmac was valid for given message"),
-            @ApiResponse(code = 422, message = "Hmac was not valid for given message")
-    })
-    @RequestMapping(method = RequestMethod.PUT, path = "/hmac")
-    public ResponseEntity<Void> verifyHmac(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody HmacVerificationRequest request) {
-        if (isValidMacFor(request.getMessage(), request.hmac(), userDetails, request.schemeId())) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.unprocessableEntity().build();
-    }
-
-    @ApiOperation(value = "Encrypts given data using currently active encryption key", consumes = "text/plain")
-    @RequestMapping(method = RequestMethod.PUT, path = "/encrypted")
-    public String encrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToEncode) {
-        return encryptedMessage(userDetails, messageToEncode).getProtectedMessage();
-    }
-
-    @ApiOperation(value = "Decrypts given data using currently active encryption key", consumes = "text/plain")
-    @RequestMapping(method = RequestMethod.PUT, path = "/decrypted")
-    public String decrypt(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToDecode) {
-        return decryptedMessage(userDetails, new EncryptedMessage(messageToDecode));
-    }
-
-    @ApiOperation(value = "Encrypts and signs given data", consumes = "text/plain")
-    @RequestMapping(method = RequestMethod.PUT, path = "/encrypted-and-signed")
-    public EncryptedAndSignedMessage encryptAndSign(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody String messageToProtect) {
-        EncryptedMessage encryptedMessage = encryptedMessage(userDetails, messageToProtect);
-        String hmac = calculateHmac(userDetails, messageToProtect);
-        return new EncryptedAndSignedMessage(encryptedMessage.getProtectedMessage(), hmac);
-    }
-
-    @ApiOperation(value = "Decrypts and verifies given data")
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "Returns decrypted and verified message"),
-            @ApiResponse(code = 422, message = "Hmac was not valid for given message")
-    })
-    @RequestMapping(method = RequestMethod.PUT, path = "/decrypted-and-verified", produces = "text/plain", consumes = "application/json")
-    public ResponseEntity decryptAndVerify(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, @RequestBody EncryptedAndSignedMessage encryptedAndSignedMessage) {
-        String decryptedMessage = decryptedMessage(userDetails, encryptedAndSignedMessage.encryptedMessage());
-        if(isValidMacFor(decryptedMessage, encryptedAndSignedMessage.verificationRequest().hmac(), userDetails, encryptedAndSignedMessage.encryptedMessage().schemeId())) {
-            return ResponseEntity.ok(decryptedMessage);
-        }
-        return ResponseEntity.unprocessableEntity().build();
-    }
-
-    private EncryptedMessage encryptedMessage(PhaasUserDetails userDetails, String messageToEncode) {
-        String salt = KeyGenerators.string().generateKey();
-        TextEncryptor encryptor = Encryptors.delux(userDetails.currentlyActiveCryptoData().dataProtectionKey(), salt);
-        return new EncryptedMessage(userDetails.activeProtectionScheme().getId(), salt, encryptor.encrypt(messageToEncode));
-    }
-
-    private String decryptedMessage(PhaasUserDetails userDetails, EncryptedMessage encryptedMessage) {
-        TextEncryptor encryptor = Encryptors.delux(userDetails.cryptoDataForId(encryptedMessage.schemeId()).dataProtectionKey(), encryptedMessage.getSalt());
-        return encryptor.decrypt(encryptedMessage.getEncryptedMessage());
-    }
-
-    private boolean isValidMacFor(String message, String hmacCandidate, PhaasUserDetails userDetails, int schemeId) {
-        String realHmac = HmacUtils.hmacSha512Hex(userDetails.cryptoDataForId(schemeId).dataProtectionKey(), message);
-        return equalsNoEarlyReturn(realHmac, hmacCandidate);
-    }
-
-    private JwtParser getJwtParser(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails, JwtParseRequest parseRequest) {
-        JwtParser parser = Jwts.parser();
-        if(parseRequest.getRequiredClaims() != null) {
-            parseRequest.getRequiredClaims().forEach(parser::require);
-        }
-        return parser.setSigningKeyResolver(new DataProtectionSchemeSigningKeyResolver(userDetails));
-    }
-
-    @RequiredArgsConstructor
-    private static class DataProtectionSchemeSigningKeyResolver implements SigningKeyResolver {
-
-        private final PhaasUserDetails userDetails;
-        @Override
-        public Key resolveSigningKey(JwsHeader header, Claims claims) {
-            return resolveSigningKey(header, "");
-        }
-
-        @Override
-        public Key resolveSigningKey(JwsHeader header, String s) {
-            SignatureAlgorithm alg = SignatureAlgorithm.forName(header.getAlgorithm());
-            int schemeId = (Integer) header.get(JWT_SCHEME_ID_HEADER_PARAM);
-            return createKeySpec(alg, userDetails.cryptoDataForId(schemeId));
-        }
-    }
-
-    static Key createKeySpec(SignatureAlgorithm alg, DataProtectionScheme.CryptoData cryptoData) {
-        return new SecretKeySpec(cryptoData.dataProtectionKey().getBytes(), alg.getJcaName());
-    }
-
-    /**
-     * From BCrypt.java
-     */
-    private static boolean equalsNoEarlyReturn(String a, String b) {
-        char[] caa = a.toCharArray();
-        char[] cab = b.toCharArray();
-        if (caa.length != cab.length) {
-            return false;
-        } else {
-            byte ret = 0;
-
-            for (int i = 0; i < caa.length; ++i) {
-                ret = (byte) (ret | caa[i] ^ cab[i]);
-            }
-
-            return ret == 0;
-        }
+        return JwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(() -> Collections.EMPTY_MAP));
     }
 }

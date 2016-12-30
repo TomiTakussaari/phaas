@@ -38,7 +38,7 @@ public class UsersFromEnvironmentStringCreator {
         usersService.createUser("testing-user", PasswordEncodingAlgorithm.SHA256_BCRYPT, Collections.singletonList(UsersService.ROLE.USER), password, sharedSecret);
 
         System.out.println(UserData.serialize(Collections.singletonList(userData)));
-        //db.users.content= [{"userDTO":{"id":null,"userName":"testing-user","passwordHash":"$2a$10$BRHdJNvWFTXEZUqmgOrrWOgjAQLfEmojjeVvzsf.PrNEWCPs.4CQq","roles":"ROLE_USER","sharedSecretForSigningCommunication":"secret"},"userConfigurationDTOs":[{"id":null,"user":"testing-user","dataProtectionKey":"2a0be8ce62026ccc.3b650d5231ec2ad6ffa02b00b64c24a51fe59dbc463613dcc8805e78a1ec0b34855600e8f91f301a2259277d0d12091ccd0400027eff25e33887f4e547e5c1e4051540cb39019db8571ba55ef6f0d32bc357731b41e3e70a2c6f699e9473803dc7d465205447fac9563c3165aaf85f47","active":true,"algorithm":"SHA256_BCRYPT"}]}]
+        //db.users.content= [{"userDTO":{"id":null,"userName":"testing-user","passwordHash":"$2a$10$8jH2j2uTf5AEXanJhiFvu.6sS.IDUB25AOqGIeYBwrOlFqe8XAHJm","roles":"ROLE_USER","sharedSecretForSigningCommunication":"secret"},"userConfigurationDTOs":[{"id":null,"user":"testing-user","dataProtectionKey":"da5385256044cfa6.b6c628d3bc92b404c4f7735e52cf80dbd6ad88fbece0a42f564e13d75607d922fd2231d9f309428430dffb1fdb00cf52cd5b080811d866757676509dba50ca77","active":true,"algorithm":"SHA256_BCRYPT"}]}]
 
     }
 }

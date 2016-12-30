@@ -1,10 +1,10 @@
 package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
-import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
-import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
+import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
+import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,8 +67,7 @@ public class UsersService implements UserDetailsService {
                 roles.stream().map(ROLE::getValue).collect(joining(",")),
                 sharedSecretForSigningCommunication);
 
-        String encryptionKey = RandomStringUtils.randomAlphanumeric(30);
-        UserConfigurationDTO configurationDTO = createUserConfigurationDTO(algorithm, userPassword, encryptionKey, userDTO);
+        UserConfigurationDTO configurationDTO = createUserConfigurationDTO(algorithm, userPassword, randomKey(), userDTO);
         save(userDTO, configurationDTO);
         return userPassword;
     }
@@ -107,11 +106,14 @@ public class UsersService implements UserDetailsService {
     public void newProtectionScheme(String userName, PasswordEncodingAlgorithm algorithm, CharSequence userPassword, Boolean removeOldSchemes) {
         Optional<UserDTO> userMaybe = userRepository.findByUserName(userName);
         userMaybe.ifPresent(userDTO -> {
-            String encryptionKey = RandomStringUtils.randomAlphanumeric(30);
             userConfigurationRepository.findByUser(userName).forEach(config -> invalidateOrRemove(removeOldSchemes, config));
-            userConfigurationRepository.save(createUserConfigurationDTO(algorithm, userPassword, encryptionKey, userDTO));
+            userConfigurationRepository.save(createUserConfigurationDTO(algorithm, userPassword, randomKey(), userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
+    }
+
+    public static String randomKey() {
+        return RandomStringUtils.randomAscii(32);
     }
 
     private void invalidateOrRemove(Boolean removeOldSchemes, UserConfigurationDTO config) {
