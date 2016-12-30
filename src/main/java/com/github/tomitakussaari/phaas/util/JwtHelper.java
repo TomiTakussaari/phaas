@@ -25,7 +25,7 @@ public class JwtHelper {
         try {
             CryptoData cryptoData = userDetails.currentlyActiveCryptoData();
 
-            Builder claimSetBuilder = new Builder().jwtID(UUID.randomUUID().toString()).issueTime(new Date());
+            Builder claimSetBuilder = new Builder().jwtID(UUID.randomUUID().toString()).issueTime(new Date()).issuer(userDetails.getUsername());
 
             claims.forEach(claimSetBuilder::claim);
 
@@ -80,10 +80,10 @@ public class JwtHelper {
         JWEObject jweObject = new JWEObject(
                 new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A256GCM)
                         .keyID(String.valueOf(cryptoData.getScheme().getId()))
+                        .compressionAlgorithm(CompressionAlgorithm.DEF)
                         .contentType("JWT")
                         .build(),
                 new Payload(signedJWT));
-
         jweObject.encrypt(new DirectEncrypter(cryptoData.dataProtectionKey().getBytes()));
         return jweObject;
     }
