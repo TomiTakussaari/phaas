@@ -9,7 +9,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import java.io.IOException;
 
-public abstract class JsonHelper {
+public class JsonHelper {
 
     public static final ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -20,16 +20,16 @@ public abstract class JsonHelper {
             .registerModule(new ParameterNamesModule())
             .registerModule(new AfterburnerModule());
 
-    public static String serialize(Object input) {
-        return objectMapSafely(() -> objectMapper.writeValueAsString(input));
-    }
-
     public static <T> T objectMapSafely(ObjectMapperOperation<T> objectMapperOperation) {
         try {
             return objectMapperOperation.get();
         } catch (IOException e) {
             throw new UnsupportedOperationException("JSON serialization does not work ?", e);
         }
+    }
+
+    public String serialize(Object input) {
+        return objectMapSafely(() -> objectMapper.writeValueAsString(input));
     }
 
     @FunctionalInterface

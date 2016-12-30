@@ -13,8 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.keygen.KeyGenerators;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,14 +42,14 @@ public class UsersService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         return userRepository.findByUserName(username)
-                .map(userDTO -> new PhaasUserDetails(userDTO, userConfigurationRepository.findByUser(username)))
+                .map(userDTO -> new PhaasUser(userDTO, userConfigurationRepository.findByUser(username)))
                 .orElseThrow(() -> new UsernameNotFoundException("Not found: " + username));
     }
 
-    public List<PhaasUserDetails> findAll() {
-        List<PhaasUserDetails> details = new ArrayList<>();
+    public List<PhaasUser> findAll() {
+        List<PhaasUser> details = new ArrayList<>();
         for (UserDTO user : userRepository.findAll()) {
-            details.add(new PhaasUserDetails(user, userConfigurationRepository.findByUser(user.getUserName())));
+            details.add(new PhaasUser(user, userConfigurationRepository.findByUser(user.getUserName())));
         }
         return details;
     }
@@ -80,7 +80,7 @@ public class UsersService implements UserDetailsService {
 
             List<UserConfigurationDTO> currentConfigs = userConfigurationRepository.findByUser(user.getUserName());
             List<UserConfigurationDTO> newConfigs = currentConfigs.stream().map(currentConfig -> {
-                String protectionKey = currentConfig.toProtectionScheme().decryptedProtectionScheme(oldPassword).dataProtectionKey();
+                String protectionKey = currentConfig.toProtectionScheme().cryptoData(oldPassword).dataProtectionKey();
                 return createUserConfigurationDTO(currentConfig.getAlgorithm(), newPassword, protectionKey, user).setId(currentConfig.getId());
             }).collect(Collectors.toList());
 
@@ -89,8 +89,8 @@ public class UsersService implements UserDetailsService {
         });
     }
 
-    private BCryptPasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
+    public PasswordEncoder passwordEncoder() {
+        return new UserPasswordEncoder();
     }
 
     @Transactional

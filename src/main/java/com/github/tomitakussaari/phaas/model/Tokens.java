@@ -9,18 +9,18 @@ import java.util.Map;
 import java.util.Optional;
 
 @UtilityClass
-public class JWT {
+public class Tokens {
 
     @RequiredArgsConstructor
     @Getter
-    public static class JwtCreateRequest {
+    public static class CreateTokenRequest {
         @NonNull
         private final Map<String, Object> claims;
     }
 
     @RequiredArgsConstructor
     @Getter
-    public static class JwtParseRequest {
+    public static class ParseTokenRequest {
         @NonNull
         private final String token;
         @NonNull

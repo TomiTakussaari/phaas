@@ -17,7 +17,7 @@ import java.util.List;
 import static java.util.stream.Collectors.toList;
 
 @RequiredArgsConstructor
-public class PhaasUserDetails implements UserDetails {
+public class PhaasUser implements UserDetails {
 
     private final UserDTO userDTO;
     private final List<UserConfigurationDTO> configurations;
@@ -47,11 +47,11 @@ public class PhaasUserDetails implements UserDetails {
     }
 
     public CryptoData currentlyActiveCryptoData() {
-        return activeProtectionScheme().decryptedProtectionScheme(findCurrentUserPassword());
+        return activeProtectionScheme().cryptoData(findCurrentUserPassword());
     }
 
     public CryptoData cryptoDataForId(int schemeId) {
-        return protectionScheme(schemeId).decryptedProtectionScheme(findCurrentUserPassword());
+        return protectionScheme(schemeId).cryptoData(findCurrentUserPassword());
     }
 
     @Override

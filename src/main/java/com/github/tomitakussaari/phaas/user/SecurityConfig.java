@@ -20,7 +20,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -55,7 +54,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.eraseCredentials(false)
                 .userDetailsService(usersService)
-                .passwordEncoder(new BCryptPasswordEncoder());
+                .passwordEncoder(usersService.passwordEncoder());
     }
 
     @Override
@@ -91,6 +90,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @ControllerAdvice
     public static class HmacCalculationAdvice implements ResponseBodyAdvice<Object> {
         public static final String X_RESPONSE_SIGN = "X-Response-Signature";
+        private static final JsonHelper jsonHelper = new JsonHelper();
+
+        public static String calculateSignature(String requestId, String signKey, String responseTime, String bodyAsString) {
+            String bodyHmac = HmacUtils.hmacSha256Hex(signKey, bodyAsString);
+            String xApiRequestIdHmac = HmacUtils.hmacSha256Hex(bodyHmac, requestId);
+            return HmacUtils.hmacSha256Hex(xApiRequestIdHmac, responseTime);
+        }
 
         @Override
         public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
@@ -102,21 +108,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                                       Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                       ServerHttpRequest request, ServerHttpResponse response) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.getPrincipal() instanceof PhaasUserDetails && ((PhaasUserDetails) authentication.getPrincipal()).communicationSigningKey() != null) {
-                PhaasUserDetails userDetails = (PhaasUserDetails) authentication.getPrincipal();
+            if (authentication != null && authentication.getPrincipal() instanceof PhaasUser && ((PhaasUser) authentication.getPrincipal()).communicationSigningKey() != null) {
+                PhaasUser userDetails = (PhaasUser) authentication.getPrincipal();
                 String responseTime = ZonedDateTime.now().format(DateTimeFormatter.RFC_1123_DATE_TIME);
-                String bodyAsString = JsonHelper.serialize(body);
+                String bodyAsString = jsonHelper.serialize(body);
                 String finalHmac = calculateSignature(response.getHeaders().getFirst(X_REQUEST_ID), userDetails.communicationSigningKey(), responseTime, bodyAsString);
                 response.getHeaders().add("date", responseTime);
                 response.getHeaders().add(X_RESPONSE_SIGN, finalHmac);
             }
             return body;
-        }
-
-        public static String calculateSignature(String requestId, String signKey, String responseTime, String bodyAsString) {
-            String bodyHmac = HmacUtils.hmacSha256Hex(signKey, bodyAsString);
-            String xApiRequestIdHmac = HmacUtils.hmacSha256Hex(bodyHmac, requestId);
-            return HmacUtils.hmacSha256Hex(xApiRequestIdHmac, responseTime);
         }
     }
 
@@ -146,11 +146,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             } finally {
                 MDC.clear();
             }
-        }
-
-        @Override
-        public void destroy() {
-            //nothing to do
         }
 
         String getPath(HttpServletRequest request) {

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.UsersService;
-import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
+import com.github.tomitakussaari.phaas.user.PhaasUser;
 import io.swagger.annotations.ApiOperation;
 import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,14 +31,14 @@ public class UsersApi {
     @ApiOperation(value = "Returns information about current user")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/me")
-    public PublicUser whoAmI(@ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
+    public PublicUser whoAmI(@ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         return toPublicUser(userDetails);
     }
 
     @ApiOperation(value = "Changes user password.")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, produces = "application/json", path = "/me")
-    public void changePassword(@RequestBody NewPasswordRequest newPasswordRequest, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
+    public void changePassword(@RequestBody NewPasswordRequest newPasswordRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         rejectIfUserDatabaseIsImmutable();
         usersService.changePasswordAndSecret(userDetails.getUsername(), newPasswordRequest.getPassword(), userDetails.findCurrentUserPassword(), newPasswordRequest.getSharedSecretForSigningCommunication());
     }
@@ -68,12 +68,12 @@ public class UsersApi {
 
     @ApiOperation(value = "Creates new protectionscheme and makes it active")
     @RequestMapping(method = RequestMethod.POST, path = "/me/scheme", consumes = "application/json")
-    public void newProtectionScheme(@RequestBody ProtectionSchemeRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
+    public void newProtectionScheme(@RequestBody ProtectionSchemeRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         rejectIfUserDatabaseIsImmutable();
         usersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm(), userDetails.findCurrentUserPassword(), request.isRemoveOldSchemes());
     }
 
-    private PublicUser toPublicUser(PhaasUserDetails userDetails) {
+    private PublicUser toPublicUser(PhaasUser userDetails) {
         return PublicUser.builder()
                 .userName(userDetails.getUsername())
                 .currentProtectionScheme(userDetails.activeProtectionScheme().toPublicScheme())
