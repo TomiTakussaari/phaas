@@ -2,7 +2,6 @@ package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.model.ProtectionSchemeNotFoundException;
 import com.github.tomitakussaari.phaas.user.SecurityConfig;
-import com.github.tomitakussaari.phaas.util.JwtHelper;
 import com.github.tomitakussaari.phaas.util.JwtHelper.JWTException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,18 +20,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ControllerAdvice
 @Slf4j
 public class ExceptionAdvisor {
-
-    @XmlRootElement
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Getter
-    @Setter
-    public static class ErrorMessage {
-        private String message;
-        private String reason;
-        private String requestId;
-        private int status;
-    }
 
     @ExceptionHandler(OperationIsNotAvailableException.class)
     public ResponseEntity<ErrorMessage> operationNotAvailable(OperationIsNotAvailableException e) {
@@ -65,6 +52,18 @@ public class ExceptionAdvisor {
 
     private ResponseEntity<ErrorMessage> responseEntity(String message, Exception e, HttpStatus status) {
         return new ResponseEntity<>(new ErrorMessage(message, e.getMessage(), MDC.get(SecurityConfig.AuditAndLoggingFilter.MDC_REQUEST_ID), status.value()), status);
+    }
+
+    @XmlRootElement
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    @Setter
+    public static class ErrorMessage {
+        private String message;
+        private String reason;
+        private String requestId;
+        private int status;
     }
 
 }

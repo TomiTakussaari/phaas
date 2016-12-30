@@ -31,6 +31,6 @@ public class DataProtectionApi {
     @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.PUT, path = "/token")
     public Map<String, Object> parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        return jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(() -> Collections.EMPTY_MAP));
+        return jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap));
     }
 }
