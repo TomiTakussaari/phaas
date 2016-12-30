@@ -27,7 +27,7 @@ public class DataProtectionScheme {
         return new PublicProtectionScheme(id, algorithm);
     }
 
-    public CryptoData decryptedProtectionScheme(CharSequence userPassword) {
+    public CryptoData cryptoData(CharSequence userPassword) {
         return new CryptoData(this, userPassword);
     }
 

@@ -35,10 +35,8 @@ public class UsersFromEnvironmentStringCreator {
             userData.setUserConfigurationDTOs(new UserConfigurationDTO[]{userConfigurationDTO});
             return userConfigurationDTO;
         });
-        usersService.createUser("testing-user", PasswordEncodingAlgorithm.SHA256_BCRYPT, Collections.singletonList(UsersService.ROLE.USER), password, sharedSecret);
+        usersService.createUser("testing-user", PasswordEncodingAlgorithm.ARGON2, Collections.singletonList(UsersService.ROLE.USER), password, sharedSecret);
 
         System.out.println(UserData.serialize(Collections.singletonList(userData)));
-        //db.users.content= [{"userDTO":{"id":null,"userName":"testing-user","passwordHash":"$2a$10$8jH2j2uTf5AEXanJhiFvu.6sS.IDUB25AOqGIeYBwrOlFqe8XAHJm","roles":"ROLE_USER","sharedSecretForSigningCommunication":"secret"},"userConfigurationDTOs":[{"id":null,"user":"testing-user","dataProtectionKey":"da5385256044cfa6.b6c628d3bc92b404c4f7735e52cf80dbd6ad88fbece0a42f564e13d75607d922fd2231d9f309428430dffb1fdb00cf52cd5b080811d866757676509dba50ca77","active":true,"algorithm":"SHA256_BCRYPT"}]}]
-
     }
 }

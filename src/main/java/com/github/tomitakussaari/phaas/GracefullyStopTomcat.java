@@ -32,7 +32,7 @@ public class GracefullyStopTomcat {
     }
 
     @Slf4j
-    private static class GracefulShutdown implements ApplicationListener<ContextClosedEvent>, TomcatConnectorCustomizer {
+    static class GracefulShutdown implements ApplicationListener<ContextClosedEvent>, TomcatConnectorCustomizer {
 
         private Connector connector;
 

@@ -5,7 +5,7 @@ import com.github.tomitakussaari.phaas.model.PasswordHashRequest;
 import com.github.tomitakussaari.phaas.model.PasswordVerifyRequest;
 import com.github.tomitakussaari.phaas.model.PasswordVerifyResult;
 import com.github.tomitakussaari.phaas.user.UsersService;
-import com.github.tomitakussaari.phaas.user.PhaasUserDetails;
+import com.github.tomitakussaari.phaas.user.PhaasUser;
 import com.github.tomitakussaari.phaas.util.PasswordHasher;
 import com.github.tomitakussaari.phaas.util.PasswordVerifier;
 import io.swagger.annotations.ApiOperation;
@@ -33,7 +33,7 @@ public class PasswordApi {
     @ApiOperation(value = "Protects password and returns hash from it")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
-    public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
+    public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         return passwordHasher.hash(request, userDetails.currentlyActiveCryptoData());
     }
 
@@ -44,7 +44,7 @@ public class PasswordApi {
             @ApiResponse(code = 422, message = "Password was not valid")
     })
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
-    public ResponseEntity<PasswordVerifyResult> verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUserDetails userDetails) {
+    public ResponseEntity<PasswordVerifyResult> verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         PasswordVerifyResult result = passwordVerifier.verify(request, userDetails.cryptoDataForId(request.schemeId()), userDetails.currentlyActiveCryptoData());
         return result.isValid() ? ResponseEntity.ok(result) : ResponseEntity.unprocessableEntity().body(result);
     }
