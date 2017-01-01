@@ -21,7 +21,7 @@ import static springfox.documentation.builders.PathSelectors.regex;
 @EnableSwagger2
 public class SwaggerConfig {
 
-    private static final String DOCUMENTED_ENDPOINTS = "/passwords.*|/users.*|/data-protection.*";
+    private static final String DOCUMENTED_ENDPOINTS = "/passwords.*|/users.*|/tokens.*";
 
     @Bean
     public Docket phaasDocumentation() {
@@ -47,7 +47,7 @@ public class SwaggerConfig {
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("PHAAS")
-                .description("Password Hashing Service")
+                .description("Password and data hashing and verification service")
                 .version("1.0")
                 .build();
     }

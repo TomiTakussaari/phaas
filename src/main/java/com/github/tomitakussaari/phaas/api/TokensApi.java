@@ -17,19 +17,19 @@ import java.util.Collections;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/data-protection")
-public class DataProtectionApi {
+@RequestMapping("/tokens")
+public class TokensApi {
 
     private final JwtHelper jwtHelper = new JwtHelper();
 
     @ApiOperation(value = "Creates token with given claims (jwt)", consumes = "application/json")
-    @RequestMapping(method = RequestMethod.POST, path = "/token")
+    @RequestMapping(method = RequestMethod.POST)
     public String generateJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         return jwtHelper.generate(userDetails, createRequest.getClaims());
     }
 
     @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")
-    @RequestMapping(method = RequestMethod.PUT, path = "/token")
+    @RequestMapping(method = RequestMethod.PUT)
     public Map<String, Object> parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         return jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap));
     }

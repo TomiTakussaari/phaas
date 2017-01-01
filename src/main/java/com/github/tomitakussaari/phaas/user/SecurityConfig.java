@@ -1,6 +1,7 @@
 package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.util.JsonHelper;
+import com.google.common.hash.Hashing;
 import io.dropwizard.servlets.ThreadNameFilter;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.slf4j.MDC;
@@ -31,14 +32,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.Principal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomitakussaari.phaas.user.SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.codec.digest.HmacUtils.hmacSha256Hex;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 @Configuration
@@ -93,9 +97,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         private static final JsonHelper jsonHelper = new JsonHelper();
 
         public static String calculateSignature(String requestId, String signKey, String responseTime, String bodyAsString) {
-            String bodyHmac = HmacUtils.hmacSha256Hex(signKey, bodyAsString);
-            String xApiRequestIdHmac = HmacUtils.hmacSha256Hex(bodyHmac, requestId);
-            return HmacUtils.hmacSha256Hex(xApiRequestIdHmac, responseTime);
+            String bodyHmac = hmacSha256Hex(signKey, bodyAsString);
+            String xApiRequestIdHmac = hmacSha256Hex(bodyHmac, requestId);
+            return hmacSha256Hex(xApiRequestIdHmac, responseTime);
         }
 
         @Override
@@ -135,13 +139,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
             final String requestId = ofNullable(trimToNull(request.getHeader(X_REQUEST_ID))).orElse(UUID.randomUUID().toString());
             try {
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                Optional<Authentication> authentication = Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication());
                 response.setHeader(X_REQUEST_ID, requestId);
                 MDC.put(MDC_PATH, getPath(request));
                 MDC.put(MDC_METHOD, request.getMethod());
                 MDC.put(MDC_IP, getRemoteIp(request));
                 MDC.put(MDC_REQUEST_ID, requestId);
-                MDC.put(MDC_USER, authentication != null ? authentication.getName() : "");
+                MDC.put(MDC_USER, authentication.map(Principal::getName).orElse(""));
                 filterChain.doFilter(request, response);
             } finally {
                 MDC.clear();

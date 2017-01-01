@@ -78,10 +78,10 @@ public class UsersService implements UserDetailsService {
             user.setPasswordHash(passwordEncoder().encode(newPassword));
             sharedSecretForSigningCommunication.ifPresent(user::setSharedSecretForSigningCommunication);
 
-            List<UserConfigurationDTO> currentConfigs = userConfigurationRepository.findByUser(user.getUserName());
-            List<UserConfigurationDTO> newConfigs = currentConfigs.stream().map(currentConfig -> {
-                String protectionKey = currentConfig.toProtectionScheme().cryptoData(oldPassword).dataProtectionKey();
-                return createUserConfigurationDTO(currentConfig.getAlgorithm(), newPassword, protectionKey, user).setId(currentConfig.getId());
+            List<UserConfigurationDTO> newConfigs = userConfigurationRepository.findByUser(user.getUserName()).stream()
+                .map(currentConfig -> {
+                    String protectionKey = currentConfig.toProtectionScheme().cryptoData(oldPassword).dataProtectionKey();
+                    return createUserConfigurationDTO(currentConfig.getAlgorithm(), newPassword, protectionKey, user).setId(currentConfig.getId());
             }).collect(Collectors.toList());
 
             save(user, newConfigs.toArray(new UserConfigurationDTO[]{}));
