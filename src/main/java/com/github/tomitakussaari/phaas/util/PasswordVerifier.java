@@ -22,7 +22,7 @@ public class PasswordVerifier {
     }
 
     private Optional<String> getUpgradedHash(PasswordVerifyRequest request, CryptoData currentScheme, CryptoData newScheme, boolean passwordValid) {
-        if (!currentScheme.equals(newScheme) && passwordValid) {
+        if (currentScheme.getScheme().getId() != newScheme.getScheme().getId() && passwordValid) {
             return Optional.of(passwordReHasher.hash(new PasswordHashRequest(request.getPasswordCandidate()), newScheme).getHash());
         }
         return Optional.empty();

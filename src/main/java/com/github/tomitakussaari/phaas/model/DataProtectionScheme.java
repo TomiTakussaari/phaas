@@ -1,5 +1,6 @@
 package com.github.tomitakussaari.phaas.model;
 
+import com.github.tomitakussaari.phaas.util.CryptoHelper;
 import lombok.*;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -7,7 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RequiredArgsConstructor
 @Getter
-@EqualsAndHashCode
 public class DataProtectionScheme {
 
     public static final String TOKEN_VALUE_SEPARATOR = ".";
@@ -32,29 +32,17 @@ public class DataProtectionScheme {
     }
 
     @RequiredArgsConstructor
-    @EqualsAndHashCode
     public static class CryptoData {
         private final DataProtectionScheme scheme;
         private final CharSequence userPassword;
+        private final CryptoHelper cryptoHelper = new CryptoHelper();
 
         public DataProtectionScheme getScheme() {
             return scheme;
         }
 
         public String dataProtectionKey() {
-            return encryptor(userPassword, saltPart()).decrypt(passwordPart());
-        }
-
-        private String saltPart() {
-            return scheme.encryptedKeyWithSalt.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[0];
-        }
-
-        private String passwordPart() {
-            return scheme.encryptedKeyWithSalt.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
-        }
-
-        public static TextEncryptor encryptor(CharSequence password, String salt) {
-            return Encryptors.text(password, salt);
+            return cryptoHelper.decryptData(userPassword, scheme.getEncryptedKeyWithSalt());
         }
     }
 

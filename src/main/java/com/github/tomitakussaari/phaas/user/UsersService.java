@@ -5,6 +5,7 @@ import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserRepository;
+import com.github.tomitakussaari.phaas.util.CryptoHelper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +24,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.CryptoData.encryptor;
-import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_VALUE_SEPARATOR;
 import static java.util.stream.Collectors.joining;
 
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -35,7 +33,7 @@ public class UsersService implements UserDetailsService {
 
     public static final String ADMIN_ROLE_VALUE = "ROLE_ADMIN";
     public static final String USER_ROLE_VALUE = "ROLE_USER";
-
+    private final CryptoHelper cryptoHelper = new CryptoHelper();
     private final UserConfigurationRepository userConfigurationRepository;
     private final UserRepository userRepository;
 
@@ -131,16 +129,10 @@ public class UsersService implements UserDetailsService {
         log.info("Saved user: {}", savedUser.getUserName());
     }
 
-    private String protectEncryptionKey(CharSequence password, String encryptionKey) {
-        String salt = KeyGenerators.string().generateKey();
-
-        return salt + TOKEN_VALUE_SEPARATOR + encryptor(password, salt).encrypt(encryptionKey);
-    }
-
     private UserConfigurationDTO createUserConfigurationDTO(PasswordEncodingAlgorithm algorithm, CharSequence password, String encryptionKey, UserDTO userDTO) {
         return new UserConfigurationDTO()
                 .setActive(true).setAlgorithm(algorithm).setUser(userDTO.getUserName())
-                .setDataProtectionKey(protectEncryptionKey(password, encryptionKey));
+                .setDataProtectionKey(cryptoHelper.encryptData(password, encryptionKey));
     }
 
     private String generatePassword() {

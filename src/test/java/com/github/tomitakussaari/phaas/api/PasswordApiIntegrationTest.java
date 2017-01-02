@@ -76,6 +76,7 @@ public class PasswordApiIntegrationTest extends IT {
 
         Map verifyResponseWithUpgradedHash = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", hashedPasswordWithOldScheme.get("hash"))), Map.class);
         assertThat(verifyResponseWithUpgradedHash.get("upgradedHash")).isNotNull();
+
         Map verifyResponse = authenticatedWebTarget().path("/passwords/verify").request().put(json(of("passwordCandidate", PASSWORD, "hash", verifyResponseWithUpgradedHash.get("upgradedHash"))), Map.class);
         assertThat((boolean) verifyResponse.get("valid")).isTrue();
         assertThat(verifyResponse.get("upgradedHash")).isNull();
