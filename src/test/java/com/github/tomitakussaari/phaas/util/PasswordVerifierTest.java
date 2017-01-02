@@ -12,12 +12,12 @@ public class PasswordVerifierTest {
 
     private final PasswordHasher hasher = new PasswordHasher();
     private final PasswordVerifier verifier = new PasswordVerifier();
-    private final String salt = KeyGenerators.string().generateKey();
     private final String password = "password";
     private final String encryptionKey = "encryption_key";
     private final String encryptionKeyTwo = "encryption_key2";
-    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, salt + "." + Encryptors.text(password, salt).encrypt(encryptionKey));
-    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(2, PasswordEncodingAlgorithm.SHA256_BCRYPT, salt + "." + Encryptors.text(password, salt).encrypt(encryptionKeyTwo));
+    private static final CryptoHelper cryptoHelper = new CryptoHelper();
+    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKey));
+    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(2, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKeyTwo));
     private final DataProtectionScheme.CryptoData decryptedCurrentProtectionScheme = currentDataProtectionScheme.cryptoData(password);
     private final DataProtectionScheme.CryptoData decryptedNewProtectionScheme = newDataProtectionScheme.cryptoData(password);
 
