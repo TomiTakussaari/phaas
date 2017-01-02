@@ -19,7 +19,6 @@ public class UserPasswordEncoderTest {
     @Test
     public void hashesNewPasswordsWithArgon2() {
         String hash = encoder.encode(password);
-        System.out.println(hash);
         assertThat(PasswordEncodingAlgorithm.findForHash(hash).get()).isEqualTo(PasswordEncodingAlgorithm.ARGON2);
     }
 

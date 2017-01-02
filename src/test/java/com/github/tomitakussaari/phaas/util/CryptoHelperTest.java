@@ -7,17 +7,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class CryptoHelperTest {
 
-    private final CryptoHelper cryptoHelper = new CryptoHelper();
+    private final CryptoHelper cryptoHelper = new CryptoHelper(new PepperProvider(""));
 
     @Test
     public void understandsVer1Hash() {
-        String version1Data = "$1.e1617d04eedbe7e1.6174ec0c7b7163be4b3fa59ef976af58378046949788877c9fcd0fc6b19fd44d";
+        String version1Data = "$1.d56ad8bfeba742ce.ea2a1e4eaed4021cee946864399ce402308f7d2fdb696c30305f5c117945ce34";
         assertThat(cryptoHelper.decryptData("password", version1Data)).isEqualTo("my-secret-data");
     }
 
     @Test
     public void understandsVer2Hash() {
-        String version2Data = "$2.b441005591ff0cd2.c0956b9e5e8a4001cd63bc97197d5e94abb8863534d919722d5e5a0581b647f9d788903f5156c11d278272db7278";
+        String version2Data = "$2.57b384772a17e677.2b94f67aa84311ad8bdc00deb666e3237b15ce6562e2ff1a94141241d20fac3c1c78d34f4ce3e5545990af5e19c4";
         assertThat(cryptoHelper.decryptData("password", version2Data)).isEqualTo("my-secret-data");
     }
 

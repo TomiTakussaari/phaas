@@ -2,6 +2,7 @@ package com.github.tomitakussaari.phaas.user.dao;
 
 import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
+import com.github.tomitakussaari.phaas.util.CryptoHelper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,8 +27,8 @@ public final class UserConfigurationDTO implements Serializable {
     private boolean active;
     private PasswordEncodingAlgorithm algorithm;
 
-    public DataProtectionScheme toProtectionScheme() {
-        return new DataProtectionScheme(getId(), getAlgorithm(), getDataProtectionKey());
+    public DataProtectionScheme toProtectionScheme(CryptoHelper helper) {
+        return new DataProtectionScheme(getId(), getAlgorithm(), getDataProtectionKey(), helper);
     }
 
 }

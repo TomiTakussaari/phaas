@@ -33,21 +33,22 @@ public class UsersService implements UserDetailsService {
 
     public static final String ADMIN_ROLE_VALUE = "ROLE_ADMIN";
     public static final String USER_ROLE_VALUE = "ROLE_USER";
-    private final CryptoHelper cryptoHelper = new CryptoHelper();
+
     private final UserConfigurationRepository userConfigurationRepository;
     private final UserRepository userRepository;
+    private final CryptoHelper cryptoHelper;
 
     @Override
     public UserDetails loadUserByUsername(String username) {
         return userRepository.findByUserName(username)
-                .map(userDTO -> new PhaasUser(userDTO, userConfigurationRepository.findByUser(username)))
+                .map(userDTO -> new PhaasUser(userDTO, userConfigurationRepository.findByUser(username), cryptoHelper))
                 .orElseThrow(() -> new UsernameNotFoundException("Not found: " + username));
     }
 
     public List<PhaasUser> findAll() {
         List<PhaasUser> details = new ArrayList<>();
         for (UserDTO user : userRepository.findAll()) {
-            details.add(new PhaasUser(user, userConfigurationRepository.findByUser(user.getUserName())));
+            details.add(new PhaasUser(user, userConfigurationRepository.findByUser(user.getUserName()), cryptoHelper));
         }
         return details;
     }
@@ -78,7 +79,7 @@ public class UsersService implements UserDetailsService {
 
             List<UserConfigurationDTO> newConfigs = userConfigurationRepository.findByUser(user.getUserName()).stream()
                     .map(currentConfig -> {
-                        String protectionKey = currentConfig.toProtectionScheme().cryptoData(oldPassword).dataProtectionKey();
+                        String protectionKey = currentConfig.toProtectionScheme(cryptoHelper).cryptoData(oldPassword).dataProtectionKey();
                         return createUserConfigurationDTO(currentConfig.getAlgorithm(), newPassword, protectionKey, user).setId(currentConfig.getId());
                     }).collect(Collectors.toList());
 

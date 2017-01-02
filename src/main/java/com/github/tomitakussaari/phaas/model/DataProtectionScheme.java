@@ -1,9 +1,10 @@
 package com.github.tomitakussaari.phaas.model;
 
 import com.github.tomitakussaari.phaas.util.CryptoHelper;
-import lombok.*;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RequiredArgsConstructor
@@ -18,6 +19,8 @@ public class DataProtectionScheme {
     private final PasswordEncodingAlgorithm algorithm;
     @NonNull
     private final String encryptedKeyWithSalt;
+    @NonNull
+    private final CryptoHelper cryptoHelper;
 
     public PasswordEncoder passwordEncoder() {
         return algorithm.encoder();
@@ -35,14 +38,14 @@ public class DataProtectionScheme {
     public static class CryptoData {
         private final DataProtectionScheme scheme;
         private final CharSequence userPassword;
-        private final CryptoHelper cryptoHelper = new CryptoHelper();
+
 
         public DataProtectionScheme getScheme() {
             return scheme;
         }
 
         public String dataProtectionKey() {
-            return cryptoHelper.decryptData(userPassword, scheme.getEncryptedKeyWithSalt());
+            return scheme.cryptoHelper.decryptData(userPassword, scheme.getEncryptedKeyWithSalt());
         }
     }
 

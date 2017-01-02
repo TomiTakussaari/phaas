@@ -31,8 +31,9 @@ Phaas is study/attempt to help with those issues by creating small http api that
 
 # example of environment configuration that will initialize phaas user database with user "testing-user", and makes user database immutable
 
-db.users.content = [{"userDTO":{"id":null,"userName":"testing-user","passwordHash":"$argon2i$v=19$m=65536,t=2,p=2$2A+c2S1U0m5Q9no2nZZHdQ$zV+HbP6+0HfrXu6MeGAIVwi+XD23NYN7TWspjSbYRUU","roles":"ROLE_USER","sharedSecretForSigningCommunication":"secret"},"userConfigurationDTOs":[{"id":null,"user":"testing-user","dataProtectionKey":"$2.741cfd8c7263212d.d2b1f970bb8f8a0369801d003c74adc648138fc7fc304867ecb69ae79c1ce3cb4027d1d9e59de9630f88b577cb5ba500cb864578244a1db6c2acd4e6cc6685f1","active":true,"algorithm":"ARGON2"}]}]
+db.users.content = [{"userDTO":{"id":null,"userName":"testing-user","passwordHash":"$argon2i$v=19$m=65536,t=2,p=2$hVLRWCeJ1VpjJCRTJL0fkQ$nwMi69L05pyVBcDGsflJ+Y4Ett9Z3bQVxUP/YodPLBo","roles":"ROLE_USER","sharedSecretForSigningCommunication":"secret"},"userConfigurationDTOs":[{"id":null,"user":"testing-user","dataProtectionKey":"$2.0f021e62f1f18e08.66e971f100652ac17b560750f527af7057cbacff5449100dcd50627af03b6de092c6978c3d68d2b155cafd5e883b98d622b532a86344b1cc290f781e37a80074","active":true,"algorithm":"ARGON2"}]}]
 immutable.users.db = true
+phaas.pepper.source = string://secret-pepper
 
 ```
  

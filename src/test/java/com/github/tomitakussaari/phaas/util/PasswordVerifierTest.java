@@ -15,9 +15,9 @@ public class PasswordVerifierTest {
     private final String password = "password";
     private final String encryptionKey = "encryption_key";
     private final String encryptionKeyTwo = "encryption_key2";
-    private static final CryptoHelper cryptoHelper = new CryptoHelper();
-    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKey));
-    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(2, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKeyTwo));
+    private static final CryptoHelper cryptoHelper = new CryptoHelper(new PepperProvider(""));
+    private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKey), cryptoHelper);
+    private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(2, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKeyTwo), cryptoHelper);
     private final DataProtectionScheme.CryptoData decryptedCurrentProtectionScheme = currentDataProtectionScheme.cryptoData(password);
     private final DataProtectionScheme.CryptoData decryptedNewProtectionScheme = newDataProtectionScheme.cryptoData(password);
 
