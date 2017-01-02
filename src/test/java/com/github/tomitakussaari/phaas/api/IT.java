@@ -59,7 +59,7 @@ public abstract class IT {
     }
 
     static String basicAuth(String username, String password) {
-        return "Basic " + new String(Base64.encode((username+":"+password).getBytes()), StandardCharsets.US_ASCII);
+        return "Basic " + new String(Base64.encode((username + ":" + password).getBytes()), StandardCharsets.US_ASCII);
     }
 
     protected String createUserAndReturnPassword(String username, List<UsersService.ROLE> roles) {

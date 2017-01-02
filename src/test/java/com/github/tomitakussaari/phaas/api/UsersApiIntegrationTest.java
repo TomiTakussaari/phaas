@@ -1,7 +1,6 @@
 package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.user.SecurityConfig;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
@@ -14,7 +13,7 @@ import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.USER;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.client.Entity.json;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class UsersApiIntegrationTest extends IT {
 
@@ -28,26 +27,26 @@ public class UsersApiIntegrationTest extends IT {
     public void updatesProtectionScheme() {
         Map currentUserWithOldScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
         Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "SHA256_BCRYPT")));
-        assertEquals(Response.Status.Family.SUCCESSFUL, updateResponse.getStatusInfo().getFamily());
+        assertThat(updateResponse.getStatusInfo().getFamily()).isEqualTo(Response.Status.Family.SUCCESSFUL);
         Map currentUserWithNewScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
-        assertNotEquals(currentUserWithOldScheme, currentUserWithNewScheme);
+        assertThat(currentUserWithNewScheme).isNotEqualTo(currentUserWithOldScheme);
     }
 
     @Test
     public void changesPassword() {
         Response updateResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
-        assertEquals(200, updateResponse.getStatus());
+        assertThat(updateResponse.getStatus()).isEqualTo(200);
         Response responseWithOldPassword = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
-        assertEquals(401, responseWithOldPassword.getStatus());
+        assertThat(responseWithOldPassword.getStatus()).isEqualTo(401);
         Response responseWithNewPassword = unAuthenticatedWebTarget().path("/users/me").request()
                 .header("Authorization", basicAuth(USER_NAME, "new-password")).accept(MediaType.APPLICATION_JSON).get();
-        assertEquals(200, responseWithNewPassword.getStatus());
+        assertThat(responseWithNewPassword.getStatus()).isEqualTo(200);
     }
 
     @Test
     public void changesResponseSigningKey() {
         Response updateResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", USER_PASSWORD, "sharedSecretForSigningCommunication", "sign-key")));
-        assertEquals(200, updateResponse.getStatus());
+        assertThat(updateResponse.getStatus()).isEqualTo(200);
         Response response = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
         validateResponseSignature(response, "sign-key");
     }
@@ -64,14 +63,14 @@ public class UsersApiIntegrationTest extends IT {
         String requestId = response.getHeaderString(SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID);
         String date = response.getHeaderString("date");
         String expectedSignature = SecurityConfig.HmacCalculationAdvice.calculateSignature(requestId, signKey, date, body);
-        assertEquals(expectedSignature, actualSignature);
+        assertThat(actualSignature).isEqualTo(expectedSignature);
     }
 
     private void validateUser(Map currentUser) {
-        assertEquals(USER_NAME, currentUser.get("userName"));
-        assertThat((Iterable<String>) currentUser.get("roles"), Matchers.containsInAnyOrder("ADMIN", "USER"));
-        assertEquals("SHA256_BCRYPT", ((Map) currentUser.get("currentProtectionScheme")).get("algorithm"));
-        assertNotNull(((Map) currentUser.get("currentProtectionScheme")).get("algorithm"));
+        assertThat(currentUser.get("userName")).isEqualTo(USER_NAME);
+        assertThat((Iterable<String>) currentUser.get("roles")).containsExactlyInAnyOrder("ADMIN", "USER");
+        assertThat(((Map) currentUser.get("currentProtectionScheme")).get("algorithm")).isEqualTo("SHA256_BCRYPT");
+        assertThat(((Map) currentUser.get("currentProtectionScheme")).get("algorithm")).isNotNull();
     }
 
     @Test
@@ -82,7 +81,7 @@ public class UsersApiIntegrationTest extends IT {
                 .header("Authorization", basicAuth("user2", password))
                 .accept(MediaType.APPLICATION_JSON).get(Map.class);
 
-        assertEquals("user2", currentUser.get("userName"));
+        assertThat(currentUser.get("userName")).isEqualTo("user2");
     }
 
     @Test
@@ -90,18 +89,18 @@ public class UsersApiIntegrationTest extends IT {
         List users = authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class);
         Map user = (Map) users.get(0);
         validateUser(user);
-        assertEquals(1, users.size());
+        assertThat(users).hasSize(1);
     }
 
     @Test
     public void canDeleteUser() {
         createUserAndReturnPassword("user2", singletonList(USER));
-        assertEquals(2, authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class).size());
+        assertThat(authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class)).hasSize(2);
 
         Response delete = authenticatedWebTarget().path("/users/user2").request()
                 .accept(MediaType.APPLICATION_JSON).delete();
-        assertEquals(200, delete.getStatus());
-        assertEquals(1, authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class).size());
+        assertThat(delete.getStatus()).isEqualTo(200);
+        assertThat(authenticatedWebTarget().path("/users").request().accept(MediaType.APPLICATION_JSON).get(List.class)).hasSize(1);
     }
 
     @Test
@@ -109,14 +108,14 @@ public class UsersApiIntegrationTest extends IT {
         String password = createUserAndReturnPassword("user3", singletonList(USER));
 
         Response accessDenied = unAuthenticatedWebTarget().path("/users").request().header("Authorization", basicAuth("user3", password)).post(json(of("userName", "user4", "algorithm", "SHA256_BCRYPT", "roles", singletonList(USER))));
-        assertEquals(401, accessDenied.getStatus());
-        assertEquals("No access", accessDenied.readEntity(Map.class).get("message"));
+        assertThat(accessDenied.getStatus()).isEqualTo(401);
+        assertThat(accessDenied.readEntity(Map.class).get("message")).isEqualTo("No access");
     }
 
     @Test
     public void unAuthenticatedCannotCreateNewUsers() {
         Response accessDenied = unAuthenticatedWebTarget().path("/users").request().post(json(of("userName", "user4", "algorithm", "SHA256_BCRYPT", "roles", singletonList(USER))));
-        assertEquals(401, accessDenied.getStatus());
-        assertEquals("Full authentication is required to access this resource", accessDenied.readEntity(Map.class).get("message"));
+        assertThat(accessDenied.getStatus()).isEqualTo(401);
+        assertThat(accessDenied.readEntity(Map.class).get("message")).isEqualTo("Full authentication is required to access this resource");
     }
 }

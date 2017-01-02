@@ -18,7 +18,7 @@ import java.util.Optional;
 import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.ADMIN;
 import static com.github.tomitakussaari.phaas.user.UsersService.ROLE.USER;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class UsersFromEnvironmentTest {
@@ -45,8 +45,8 @@ public class UsersFromEnvironmentTest {
         String serializedData = UsersFromEnvironment.UserData.serialize(Collections.singletonList(dataFromDTOs));
         UsersFromEnvironment.UserData dataFromString = UsersFromEnvironment.UserData.deSerialize(serializedData).get(0);
 
-        assertEquals(serializedFrom, serializedData);
-        assertEquals(dataFromDTOs, dataFromString);
+        assertThat(serializedData).isEqualTo(serializedFrom);
+        assertThat(dataFromString).isEqualTo(dataFromDTOs);
     }
 
     @Test

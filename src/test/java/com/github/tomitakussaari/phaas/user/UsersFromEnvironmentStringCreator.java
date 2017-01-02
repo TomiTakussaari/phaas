@@ -2,10 +2,10 @@ package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.UsersFromEnvironment.UserData;
-import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
-import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
+import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
+import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import org.mockito.Mockito;
 
 import java.util.Collections;

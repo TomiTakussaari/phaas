@@ -28,8 +28,8 @@ public enum PasswordEncodingAlgorithm {
     }
 
     public static Optional<PasswordEncodingAlgorithm> findForHash(String hash) {
-        for(PasswordEncodingAlgorithm algorithm : values()) {
-            if(hash.startsWith(algorithm.hashPrefix)) {
+        for (PasswordEncodingAlgorithm algorithm : values()) {
+            if (hash.startsWith(algorithm.hashPrefix)) {
                 return Optional.of(algorithm);
             }
         }

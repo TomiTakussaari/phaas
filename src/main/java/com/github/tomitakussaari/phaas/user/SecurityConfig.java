@@ -1,9 +1,7 @@
 package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.util.JsonHelper;
-import com.google.common.hash.Hashing;
 import io.dropwizard.servlets.ThreadNameFilter;
-import org.apache.commons.codec.digest.HmacUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;

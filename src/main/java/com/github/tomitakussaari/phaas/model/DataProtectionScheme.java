@@ -11,7 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class DataProtectionScheme {
 
     public static final String TOKEN_VALUE_SEPARATOR = ".";
-    public static final String ESCAPED_TOKEN_VALUE_SEPARATOR = "\\"+TOKEN_VALUE_SEPARATOR;
+    public static final String ESCAPED_TOKEN_VALUE_SEPARATOR = "\\" + TOKEN_VALUE_SEPARATOR;
 
     private final int id;
     @NonNull

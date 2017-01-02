@@ -9,11 +9,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 public class JwtHelperTest {
@@ -39,7 +40,18 @@ public class JwtHelperTest {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
         String token = jwtHelper.generate(userDetails, claims);
         Map<String, Object> parsedClaims = jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of());
-        assertEquals(claims.get("claim1"), parsedClaims.get("claim1"));
+        assertThat(parsedClaims.get("claim1")).isEqualTo(claims.get("claim1"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void generateAndParseWithMoreComplexClaims() {
+        ImmutableMap<String, Object> claims = ImmutableMap.of("nationalId", "010100-123D", "customerids", asList(1232L, 412412L, 1242141L, 213211L, 12412412L, 121231L), "tags", ImmutableMap.of("difficult-customer", true, "is-always-wrong", false), "admin", true);
+        String token = jwtHelper.generate(userDetails, claims);
+        Map<String, Object> parsedClaims = jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of("admin", true));
+        assertThat(parsedClaims.get("nationalId")).isEqualTo("010100-123D");
+        assertThat((List) parsedClaims.get("customerids")).containsExactlyInAnyOrder(1232L, 412412L, 1242141L, 213211L, 12412412L, 121231L);
+        assertThat((Map) parsedClaims.get("tags")).containsAllEntriesOf(ImmutableMap.of("difficult-customer", true, "is-always-wrong", false));
     }
 
     @Test
@@ -47,9 +59,9 @@ public class JwtHelperTest {
         ImmutableMap<String, Object> claims = ImmutableMap.of();
         String token = jwtHelper.generate(userDetails, claims);
         Map<String, Object> parsedClaims = jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of());
-        assertNotNull(parsedClaims.get("jti"));
-        assertNotNull(parsedClaims.get("iat"));
-        assertEquals("my-user", parsedClaims.get("iss"));
+        assertThat(parsedClaims.get("jti")).isNotNull();
+        assertThat(parsedClaims.get("iat")).isNotNull();
+        assertThat(parsedClaims.get("iss")).isEqualTo("my-user");
     }
 
     @Test
@@ -59,7 +71,7 @@ public class JwtHelperTest {
         try {
             jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of("claim2", "value2"));
         } catch (JwtHelper.JWTException e) {
-            assertEquals("Wrong value for claim2 required: value2 but was null", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Wrong value for claim2 required: value2 but was null");
         }
     }
 
@@ -71,8 +83,14 @@ public class JwtHelperTest {
             jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of("claim1", "something-else"));
             fail("should not have succeeded");
         } catch (JwtHelper.JWTException e) {
-            assertEquals("Wrong value for claim1 required: something-else but was value1", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("Wrong value for claim1 required: something-else but was value1");
         }
+    }
+
+    @Test(expected = JwtHelper.JWTException.class)
+    public void refufesTokenThatIsProtectedInUnacceptableWay() {
+        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
+        jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of());
     }
 
     @Test
@@ -92,7 +110,7 @@ public class JwtHelperTest {
             jwtHelper.verifyAndGetClaims(userDetails, oldToken, claims);
             fail("should not have succeeded");
         } catch (JwtHelper.JWTException e) {
-            assertEquals("AES/GCM/NoPadding decryption failed: Tag mismatch!", e.getMessage());
+            assertThat(e.getMessage()).isEqualTo("AES/GCM/NoPadding decryption failed: Tag mismatch!");
         }
     }
 }

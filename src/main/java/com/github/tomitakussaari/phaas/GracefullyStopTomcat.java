@@ -38,7 +38,7 @@ public class GracefullyStopTomcat {
 
         @Override
         public void onApplicationEvent(ContextClosedEvent event) {
-            if(connector != null) {
+            if (connector != null) {
                 this.connector.pause();
                 stopTomcatGracefully();
             }

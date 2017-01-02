@@ -3,24 +3,24 @@ package com.github.tomitakussaari.phaas.api;
 import org.junit.Test;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ExceptionAdvisorTest {
 
     @Test
     public void mapsExceptionToHttp500() {
         ResponseEntity<ExceptionAdvisor.ErrorMessage> error = new ExceptionAdvisor().genericError(new Exception("error"));
-        assertEquals(500, error.getStatusCode().value());
-        assertEquals("Internal error", error.getBody().getMessage());
-        assertEquals("error", error.getBody().getReason());
+        assertThat(error.getStatusCode().value()).isEqualTo(500);
+        assertThat(error.getBody().getMessage()).isEqualTo("Internal error");
+        assertThat(error.getBody().getReason()).isEqualTo("error");
     }
 
     @Test
     public void mapsOperationIsNotAvailableExceptionToHttp500() {
         ResponseEntity<ExceptionAdvisor.ErrorMessage> error = new ExceptionAdvisor().operationNotAvailable(new OperationIsNotAvailableException("not available"));
-        assertEquals(405, error.getStatusCode().value());
-        assertEquals("Disabled", error.getBody().getMessage());
-        assertEquals("not available", error.getBody().getReason());
+        assertThat(error.getStatusCode().value()).isEqualTo(405);
+        assertThat(error.getBody().getMessage()).isEqualTo("Disabled");
+        assertThat(error.getBody().getReason()).isEqualTo("not available");
     }
 
 }
