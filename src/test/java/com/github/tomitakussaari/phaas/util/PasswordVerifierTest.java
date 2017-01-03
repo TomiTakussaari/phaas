@@ -3,8 +3,6 @@ package com.github.tomitakussaari.phaas.util;
 import com.github.tomitakussaari.phaas.model.*;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.keygen.KeyGenerators;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,7 +13,7 @@ public class PasswordVerifierTest {
     private final String password = "password";
     private final String encryptionKey = "encryption_key";
     private final String encryptionKeyTwo = "encryption_key2";
-    private static final CryptoHelper cryptoHelper = new CryptoHelper(new PepperProvider(""));
+    private static final CryptoHelper cryptoHelper = new CryptoHelper(new PepperSource(""));
     private final DataProtectionScheme currentDataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKey), cryptoHelper);
     private final DataProtectionScheme newDataProtectionScheme = new DataProtectionScheme(2, PasswordEncodingAlgorithm.SHA256_BCRYPT, cryptoHelper.encryptData(password, encryptionKeyTwo), cryptoHelper);
     private final DataProtectionScheme.CryptoData decryptedCurrentProtectionScheme = currentDataProtectionScheme.cryptoData(password);

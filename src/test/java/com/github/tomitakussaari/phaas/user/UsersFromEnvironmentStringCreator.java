@@ -7,7 +7,7 @@ import com.github.tomitakussaari.phaas.user.dao.UserConfigurationRepository;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import com.github.tomitakussaari.phaas.util.CryptoHelper;
-import com.github.tomitakussaari.phaas.util.PepperProvider;
+import com.github.tomitakussaari.phaas.util.PepperSource;
 import org.mockito.Mockito;
 
 import java.util.Collections;
@@ -26,7 +26,7 @@ public class UsersFromEnvironmentStringCreator {
     public static void main(String... args) {
         String sharedSecret = "secret";
         String password = "my-password";
-        UsersService usersService = new UsersService(userConfigurationRepository, userRepository, new CryptoHelper(new PepperProvider("secret-pepper")));
+        UsersService usersService = new UsersService(userConfigurationRepository, userRepository, new CryptoHelper(new PepperSource("secret-pepper")));
         final UserData userData = new UserData();
         when(userRepository.save(any(UserDTO.class))).then(invocationOnMock -> {
             userData.setUserDTO((UserDTO) invocationOnMock.getArguments()[0]);

@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class CryptoHelperTest {
 
-    private final CryptoHelper cryptoHelper = new CryptoHelper(new PepperProvider(""));
+    private final CryptoHelper cryptoHelper = new CryptoHelper(new PepperSource(""));
 
     @Test
     public void understandsVer1Hash() {

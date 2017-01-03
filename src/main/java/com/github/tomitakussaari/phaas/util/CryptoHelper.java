@@ -16,12 +16,12 @@ import static com.github.tomitakussaari.phaas.model.DataProtectionScheme.TOKEN_V
 @Service
 public class CryptoHelper {
 
-    private final PepperProvider pepperProvider;
+    private final PepperSource pepperSource;
 
     public String encryptData(CharSequence password, String dataToEncrypt) {
         Version encryptVersion = Version.defaultVersion();
         String salt = KeyGenerators.string().generateKey();
-        String pepperedPassword = password+"."+pepperProvider.getPepper();
+        String pepperedPassword = password+"."+ pepperSource.getPepper();
         return encryptVersion.name() + TOKEN_VALUE_SEPARATOR + salt + TOKEN_VALUE_SEPARATOR + encryptVersion.encryptor(pepperedPassword, salt).encrypt(dataToEncrypt);
     }
 
@@ -29,7 +29,7 @@ public class CryptoHelper {
         Version version = Version.valueOf(encryptedData.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[0]);
         String salt = encryptedData.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[1];
         String data = encryptedData.split(DataProtectionScheme.ESCAPED_TOKEN_VALUE_SEPARATOR)[2];
-        String pepperedPassword = password+"."+pepperProvider.getPepper();
+        String pepperedPassword = password+"."+ pepperSource.getPepper();
         return version.encryptor(pepperedPassword, salt).decrypt(data);
     }
 }
