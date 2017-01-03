@@ -6,7 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Function;
 
 @Service
@@ -17,6 +23,22 @@ public class PepperProvider {
     private enum Source {
         STRING("string", source -> {
             return source.replaceAll("string://", "");
+        }),
+        FILE("file", source -> {
+            try {
+                return new String(Files.readAllBytes(Paths.get(source.replaceAll("file://", ""))), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }),
+        HTTP("http", source -> {
+            try {
+                URL url = new URL(source);
+                url.getAuthority();
+                return null;
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
         });
 
         private final String protocol;
