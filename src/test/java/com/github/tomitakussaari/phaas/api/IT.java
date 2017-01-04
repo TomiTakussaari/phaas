@@ -1,8 +1,11 @@
 package com.github.tomitakussaari.phaas.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.github.tomitakussaari.phaas.Application;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.UsersService;
+import com.github.tomitakussaari.phaas.util.JsonHelper;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.After;
 import org.junit.Before;
@@ -14,6 +17,12 @@ import org.springframework.security.crypto.codec.Base64;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import javax.ws.rs.client.*;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -37,8 +46,22 @@ public abstract class IT {
     @Value("${local.server.port}")
     int port;
 
-    private final Client authenticatedClient = ClientBuilder.newBuilder().register(JacksonFeature.class).register(HttpBasicAuthFilter.class).build();
-    private final Client unAuthenticatedClient = ClientBuilder.newBuilder().register(JacksonFeature.class).build();
+    private final Client authenticatedClient;
+    private final Client unAuthenticatedClient;
+
+    public IT() {
+        authenticatedClient = ClientBuilder.newBuilder().register(ObjectMapperContextResolver.class).register(JacksonFeature.class).register(HttpBasicAuthFilter.class).build();
+        unAuthenticatedClient = ClientBuilder.newBuilder().register(ObjectMapperContextResolver.class).register(JacksonFeature.class).build();
+    }
+
+    @Provider
+    static class ObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
+
+        @Override
+        public ObjectMapper getContext(Class<?> type) {
+            return JsonHelper.objectMapper;
+        }
+    }
 
     @Before
     public void initialize() {

@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
+import java.time.Duration;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -17,8 +18,9 @@ public class TokensApiIntegrationTest extends IT {
     public void createsAndVerifiesJsonWebToken() {
         String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), String.class);
         Map response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token)), Map.class);
-        assertThat(response.get("claim1")).isEqualTo("value1");
-        assertThat(response.get("claim2")).isEqualTo("value2");
+        Map claims = (Map) response.get("claims");
+        assertThat(claims.get("claim1")).isEqualTo("value1");
+        assertThat(claims.get("claim2")).isEqualTo("value2");
     }
 
     @Test
@@ -31,21 +33,32 @@ public class TokensApiIntegrationTest extends IT {
         Map response = unAuthenticatedWebTarget().path("/tokens").request()
                 .header("Authorization", basicAuth(USER_NAME, "new-password"))
                 .put(json(ImmutableMap.of("token", token)), Map.class);
-        assertThat(response.get("claim1")).isEqualTo("value1");
-        assertThat(response.get("claim2")).isEqualTo("value2");
+        Map claims = (Map) response.get("claims");
+        assertThat(claims.get("claim1")).isEqualTo("value1");
+        assertThat(claims.get("claim2")).isEqualTo("value2");
     }
 
     @Test
-    public void generatesIssuedAtClaimToJsonWebToken() {
+    public void returnsIssuedAtInfoInParsedToken() {
         String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("a", "b"))), String.class);
         Map response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token)), Map.class);
-        assertThat(response.get("iat").toString()).isNotNull();
+        Map claims = (Map) response.get("claims");
+        assertThat(response.get("issuedAt")).isNotNull();
+        assertThat(claims.get("iat")).isNull();
     }
 
     @Test
     public void createsAndVerifiesJsonWebTokenWithWantedClaims() {
         String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), String.class);
         authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token, "requiredClaims", ImmutableMap.of("my-claim", "is-true"))), Map.class);
+    }
+
+    @Test
+    public void rejectsTokenThatIsIssuedTooLongTimeAgo() {
+        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), String.class);
+        Response response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token, "maxAcceptedAge", Duration.ofNanos(1))));
+        assertThat(response.getStatus()).isEqualTo(422);
+        assertThat(response.readEntity(Map.class).get("message").toString()).contains("Token is too old, max allowed=PT0.000000001S actual=");
     }
 
     @Test

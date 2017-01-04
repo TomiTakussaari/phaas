@@ -7,15 +7,22 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTClaimsSet.Builder;
 import com.nimbusds.jwt.SignedJWT;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import java.text.ParseException;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.time.LocalDateTime.now;
 
 public class JwtHelper {
 
@@ -59,12 +66,12 @@ public class JwtHelper {
         return jweObject;
     }
 
-    public String generate(PhaasUser userDetails, Map<String, Object> claims) {
+    public String generate(PhaasUser userDetails, Map<String, Object> claims, Optional<Duration> validityTime) {
         try {
             CryptoData cryptoData = userDetails.currentlyActiveCryptoData();
 
             Builder claimSetBuilder = new Builder().jwtID(UUID.randomUUID().toString()).issueTime(new Date()).issuer(userDetails.getUsername());
-
+            validityTime.ifPresent(ttl -> claimSetBuilder.expirationTime(Date.from(now().plus(ttl).atZone(ZoneId.systemDefault()).toInstant())));
             claims.forEach(claimSetBuilder::claim);
 
             return encrypt(cryptoData, signedToken(cryptoData, claimSetBuilder)).serialize();
@@ -73,17 +80,48 @@ public class JwtHelper {
         }
     }
 
-    public Map<String, Object> verifyAndGetClaims(PhaasUser userDetails, String token, Map<String, Object> requiredClaims) {
+    public TokenClaims verifyAndGetClaims(PhaasUser userDetails, String token, Map<String, Object> requiredClaims, Optional<Duration> maximumAge) {
         try {
             JWEObject jweObject = JWEObject.parse(token);
             CryptoData cryptoData = findCryptoData(userDetails, jweObject);
+            SignedJWT signedJWT = decryptAndVerifySignature(jweObject, cryptoData);
+            JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+            Map<String, Object> actualClaims = new HashMap<>(claimsSet.getClaims());
+            ZonedDateTime issuedAt = ZonedDateTime.ofInstant(claimsSet.getIssueTime().toInstant(), ZoneId.systemDefault());
 
-            Map<String, Object> actualClaims = decryptAndVerifySignature(jweObject, cryptoData).getJWTClaimsSet().getClaims();
+            verifyClaims(requiredClaims, actualClaims);
+            verifyIssuer(userDetails.getUsername(), claimsSet.getIssuer());
+            verifyAge(issuedAt, maximumAge, Optional.ofNullable(claimsSet.getExpirationTime()));
 
-            return verifyClaims(requiredClaims, actualClaims);
+            return new TokenClaims(removeInternallyUsedClaims(actualClaims), issuedAt);
         } catch (JOSEException | ParseException | IllegalArgumentException e) {
             throw new JWTException(e);
         }
+    }
+
+    private void verifyAge(ZonedDateTime issuedAt, Optional<Duration> maximumAge, Optional<Date> expirationTimeMaybe) {
+        ZonedDateTime now = ZonedDateTime.now();
+        maximumAge.ifPresent(maxAge -> checkArgument(issuedAt.plus(maxAge).isAfter(now), "Token is too old, max allowed="+maxAge+ " actual="+Duration.between(issuedAt, now)));
+
+        expirationTimeMaybe.ifPresent(expirationTime -> checkArgument(expirationTime.after(new Date()), "Token has expired at "+expirationTime));
+    }
+
+    private void verifyIssuer(String expectedIssuer, String actualIssuer) {
+        checkArgument(expectedIssuer.equals(actualIssuer), "Issued by wrong party: "+actualIssuer+ " when expected: "+expectedIssuer);
+    }
+
+    private Map<String, Object> removeInternallyUsedClaims(Map<String, Object> actualClaims) {
+        actualClaims.remove("iat");
+        actualClaims.remove("iss");
+        return actualClaims;
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    public static class TokenClaims {
+        @NonNull
+        private final Map<String, Object> claims;
+        private final ZonedDateTime issuedAt;
     }
 
     public static class JWTException extends RuntimeException {

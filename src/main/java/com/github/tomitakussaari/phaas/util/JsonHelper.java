@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
@@ -17,6 +18,7 @@ public class JsonHelper {
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
             .enable(SerializationFeature.INDENT_OUTPUT)
             .registerModule(new Jdk8Module())
+            .registerModule(new JavaTimeModule())
             .registerModule(new ParameterNamesModule())
             .registerModule(new AfterburnerModule());
 

@@ -1,8 +1,8 @@
 package com.github.tomitakussaari.phaas.api;
 
-
 import com.github.tomitakussaari.phaas.model.Tokens.CreateTokenRequest;
 import com.github.tomitakussaari.phaas.model.Tokens.ParseTokenRequest;
+import com.github.tomitakussaari.phaas.model.Tokens.ParseTokenResponse;
 import com.github.tomitakussaari.phaas.user.PhaasUser;
 import com.github.tomitakussaari.phaas.util.JwtHelper;
 import io.swagger.annotations.ApiOperation;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.Collections;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/tokens")
@@ -25,12 +24,13 @@ public class TokensApi {
     @ApiOperation(value = "Creates token with given claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.POST)
     public String generateJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        return jwtHelper.generate(userDetails, createRequest.getClaims());
+        return jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
     }
 
     @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.PUT)
-    public Map<String, Object> parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        return jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap));
+    public ParseTokenResponse parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+        JwtHelper.TokenClaims tokenClaims = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
+        return new ParseTokenResponse(tokenClaims.getClaims(), tokenClaims.getIssuedAt());
     }
 }
