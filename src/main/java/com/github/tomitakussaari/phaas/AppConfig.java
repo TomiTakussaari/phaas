@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 
@@ -22,8 +23,11 @@ public class AppConfig {
 
     @Bean
     @ConfigurationProperties(prefix = "datasource.phaas")
-    public DataSource dataSource() {
-        return new HikariDataSource();
+    public DataSource dataSource(Environment environment) {
+        Boolean immutableDb = environment.getProperty("immutable.users.db", Boolean.class);
+        HikariDataSource hikariDataSource = new HikariDataSource();
+        hikariDataSource.setReadOnly(immutableDb);
+        return hikariDataSource;
     }
 
     @Bean
