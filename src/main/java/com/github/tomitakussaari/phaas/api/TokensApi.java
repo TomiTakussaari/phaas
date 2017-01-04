@@ -25,8 +25,8 @@ public class TokensApi {
     @ApiOperation(value = "Creates token with given claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.POST)
     public CreateTokenResponse generateJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        JwtHelper.Token token = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
-        return new CreateTokenResponse(token.getId(), token.getToken());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
+        return new CreateTokenResponse(createdToken.getId(), createdToken.getToken());
     }
 
     @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")

@@ -40,8 +40,8 @@ public class JwtHelperTest {
     @Test
     public void generateAndParse() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
-        JwtHelper.ParsedToken claimsSet = jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of(), Optional.empty());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
+        JwtHelper.ParsedToken claimsSet = jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of(), Optional.empty());
         assertThat(claimsSet.getClaims().get("claim1")).isEqualTo(claims.get("claim1"));
     }
 
@@ -49,8 +49,8 @@ public class JwtHelperTest {
     @SuppressWarnings("unchecked")
     public void generateAndParseWithMoreComplexClaims() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("nationalId", "010100-123D", "customerids", asList(1232L, 412412L, 1242141L, 213211L, 12412412L, 121231L), "tags", ImmutableMap.of("difficult-customer", true, "is-always-wrong", false), "admin", true);
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
-        JwtHelper.ParsedToken claimsSet = jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of("admin", true), Optional.empty());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
+        JwtHelper.ParsedToken claimsSet = jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of("admin", true), Optional.empty());
         assertThat(claimsSet.getClaims().get("nationalId")).isEqualTo("010100-123D");
         assertThat((List) claimsSet.getClaims().get("customerids")).containsExactlyInAnyOrder(1232L, 412412L, 1242141L, 213211L, 12412412L, 121231L);
         assertThat((Map) claimsSet.getClaims().get("tags")).containsAllEntriesOf(ImmutableMap.of("difficult-customer", true, "is-always-wrong", false));
@@ -59,8 +59,8 @@ public class JwtHelperTest {
     @Test
     public void setsIssuedAtAndTokenIdButDoesNotReturnThemAsClaims() {
         ImmutableMap<String, Object> claims = ImmutableMap.of();
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
-        JwtHelper.ParsedToken claimsSet = jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of(), Optional.empty());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
+        JwtHelper.ParsedToken claimsSet = jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of(), Optional.empty());
         assertThat(claimsSet.getId()).isNotNull();
         assertThat(claimsSet.getIssuedAt()).isNotNull();
         assertThat(claimsSet.getClaims().get("iat")).isNull();
@@ -71,9 +71,9 @@ public class JwtHelperTest {
     @Test
     public void rejectsTokensWithoutRequiredClaim() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
         try {
-            jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of("claim2", "value2"), Optional.empty());
+            jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of("claim2", "value2"), Optional.empty());
             fail("should not have succeeded");
         } catch (JwtHelper.JWTException e) {
             assertThat(e.getMessage()).isEqualTo("Wrong value for claim2 required: value2 but was null");
@@ -83,9 +83,9 @@ public class JwtHelperTest {
     @Test
     public void rejectsTokenThatIsTooOld() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
         try {
-            jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of(), Optional.of(Duration.ofNanos(1)));
+            jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of(), Optional.of(Duration.ofNanos(1)));
             fail("should not have succeeded");
         } catch (JwtHelper.JWTException e) {
             assertThat(e.getMessage()).contains("Token is too old, max allowed=PT0.000000001S actual=PT");
@@ -95,9 +95,9 @@ public class JwtHelperTest {
     @Test
     public void rejectsTokenThatHasExpirationTimeInPast() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.of(Duration.ofNanos(1)));
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.of(Duration.ofNanos(1)));
         try {
-            jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of(), Optional.empty());
+            jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of(), Optional.empty());
             fail("should not have succeeded");
         } catch (JwtHelper.JWTException e) {
             assertThat(e.getMessage()).contains("Token has expired at ");
@@ -107,16 +107,16 @@ public class JwtHelperTest {
     @Test
     public void acceptsTokenThatIsYoungEnough() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
-        jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of(), Optional.of(Duration.ofMinutes(1)));
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
+        jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of(), Optional.of(Duration.ofMinutes(1)));
     }
 
     @Test
     public void rejectsTokensWithWrongValueForRequiredClaim() {
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
-        JwtHelper.Token token = jwtHelper.generate(userDetails, claims, Optional.empty());
+        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, claims, Optional.empty());
         try {
-            jwtHelper.verifyAndGetClaims(userDetails, token.getToken(), ImmutableMap.of("claim1", "something-else"), Optional.empty());
+            jwtHelper.verifyAndGetClaims(userDetails, createdToken.getToken(), ImmutableMap.of("claim1", "something-else"), Optional.empty());
             fail("should not have succeeded");
         } catch (JwtHelper.JWTException e) {
             assertThat(e.getMessage()).isEqualTo("Wrong value for claim1 required: something-else but was value1");

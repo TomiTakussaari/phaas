@@ -55,9 +55,7 @@ public class PepperSource {
     @RequiredArgsConstructor
     @Getter
     private enum Source {
-        STRING(source -> {
-            return source.replaceAll("string://", "");
-        }),
+        STRING(source -> source.replaceAll("string://", "")),
         FILE(source -> {
             try {
                 return new String(Files.readAllBytes(Paths.get(source.replaceAll("file://", ""))), StandardCharsets.UTF_8);

@@ -65,7 +65,7 @@ public class JwtHelper {
         return jweObject;
     }
 
-    public Token generate(PhaasUser userDetails, Map<String, Object> claims, Optional<Duration> validityTime) {
+    public CreatedToken generate(PhaasUser userDetails, Map<String, Object> claims, Optional<Duration> validityTime) {
         try {
             CryptoData cryptoData = userDetails.currentlyActiveCryptoData();
 
@@ -74,7 +74,7 @@ public class JwtHelper {
             claims.forEach(claimSetBuilder::claim);
             SignedJWT jwt = signedToken(cryptoData, claimSetBuilder);
             JWEObject jwe = encrypt(cryptoData, jwt);
-            return new Token(jwt.getJWTClaimsSet().getJWTID(), jwe.serialize());
+            return new CreatedToken(jwt.getJWTClaimsSet().getJWTID(), jwe.serialize());
         } catch (JOSEException|ParseException e) {
             throw new JWTException(e);
         }
@@ -119,7 +119,7 @@ public class JwtHelper {
 
     @RequiredArgsConstructor
     @Getter
-    public static class Token {
+    public static class CreatedToken {
         @NonNull
         private final String id;
         @NonNull
