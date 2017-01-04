@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.text.ParseException;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -66,21 +65,22 @@ public class JwtHelper {
         return jweObject;
     }
 
-    public String generate(PhaasUser userDetails, Map<String, Object> claims, Optional<Duration> validityTime) {
+    public Token generate(PhaasUser userDetails, Map<String, Object> claims, Optional<Duration> validityTime) {
         try {
             CryptoData cryptoData = userDetails.currentlyActiveCryptoData();
 
             Builder claimSetBuilder = new Builder().jwtID(UUID.randomUUID().toString()).issueTime(new Date()).issuer(userDetails.getUsername());
             validityTime.ifPresent(ttl -> claimSetBuilder.expirationTime(Date.from(now().plus(ttl).atZone(ZoneId.systemDefault()).toInstant())));
             claims.forEach(claimSetBuilder::claim);
-
-            return encrypt(cryptoData, signedToken(cryptoData, claimSetBuilder)).serialize();
-        } catch (JOSEException e) {
+            SignedJWT jwt = signedToken(cryptoData, claimSetBuilder);
+            JWEObject jwe = encrypt(cryptoData, jwt);
+            return new Token(jwt.getJWTClaimsSet().getJWTID(), jwe.serialize());
+        } catch (JOSEException|ParseException e) {
             throw new JWTException(e);
         }
     }
 
-    public TokenClaims verifyAndGetClaims(PhaasUser userDetails, String token, Map<String, Object> requiredClaims, Optional<Duration> maximumAge) {
+    public ParsedToken verifyAndGetClaims(PhaasUser userDetails, String token, Map<String, Object> requiredClaims, Optional<Duration> maximumAge) {
         try {
             JWEObject jweObject = JWEObject.parse(token);
             CryptoData cryptoData = findCryptoData(userDetails, jweObject);
@@ -93,7 +93,7 @@ public class JwtHelper {
             verifyIssuer(userDetails.getUsername(), claimsSet.getIssuer());
             verifyAge(issuedAt, maximumAge, Optional.ofNullable(claimsSet.getExpirationTime()));
 
-            return new TokenClaims(removeInternallyUsedClaims(actualClaims), issuedAt);
+            return new ParsedToken(removeInternallyUsedClaims(actualClaims), issuedAt, claimsSet.getJWTID());
         } catch (JOSEException | ParseException | IllegalArgumentException e) {
             throw new JWTException(e);
         }
@@ -113,15 +113,28 @@ public class JwtHelper {
     private Map<String, Object> removeInternallyUsedClaims(Map<String, Object> actualClaims) {
         actualClaims.remove("iat");
         actualClaims.remove("iss");
+        actualClaims.remove("jti");
         return actualClaims;
     }
 
     @RequiredArgsConstructor
     @Getter
-    public static class TokenClaims {
+    public static class Token {
+        @NonNull
+        private final String id;
+        @NonNull
+        private final String token;
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    public static class ParsedToken {
         @NonNull
         private final Map<String, Object> claims;
+        @NonNull
         private final ZonedDateTime issuedAt;
+        @NonNull
+        private final String id;
     }
 
     public static class JWTException extends RuntimeException {

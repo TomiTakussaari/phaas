@@ -16,8 +16,8 @@ public class TokensApiIntegrationTest extends IT {
 
     @Test
     public void createsAndVerifiesJsonWebToken() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), String.class);
-        Map response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token)), Map.class);
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), Map.class);
+        Map response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token.get("token"))), Map.class);
         Map claims = (Map) response.get("claims");
         assertThat(claims.get("claim1")).isEqualTo("value1");
         assertThat(claims.get("claim2")).isEqualTo("value2");
@@ -25,14 +25,14 @@ public class TokensApiIntegrationTest extends IT {
 
     @Test
     public void jsonWebTokenCanBeValidatedAfterPasswordChange() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), String.class);
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), Map.class);
 
         Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
         assertThat(passwordChangeResponse.getStatus()).isEqualTo(200);
 
         Map response = unAuthenticatedWebTarget().path("/tokens").request()
                 .header("Authorization", basicAuth(USER_NAME, "new-password"))
-                .put(json(ImmutableMap.of("token", token)), Map.class);
+                .put(json(ImmutableMap.of("token", token.get("token"))), Map.class);
         Map claims = (Map) response.get("claims");
         assertThat(claims.get("claim1")).isEqualTo("value1");
         assertThat(claims.get("claim2")).isEqualTo("value2");
@@ -40,8 +40,8 @@ public class TokensApiIntegrationTest extends IT {
 
     @Test
     public void returnsIssuedAtInfoInParsedToken() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("a", "b"))), String.class);
-        Map response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token)), Map.class);
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("a", "b"))), Map.class);
+        Map response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token.get("token"))), Map.class);
         Map claims = (Map) response.get("claims");
         assertThat(response.get("issuedAt")).isNotNull();
         assertThat(claims.get("iat")).isNull();
@@ -49,30 +49,30 @@ public class TokensApiIntegrationTest extends IT {
 
     @Test
     public void createsAndVerifiesJsonWebTokenWithWantedClaims() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), String.class);
-        authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token, "requiredClaims", ImmutableMap.of("my-claim", "is-true"))), Map.class);
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), Map.class);
+        authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token.get("token"), "requiredClaims", ImmutableMap.of("my-claim", "is-true"))), Map.class);
     }
 
     @Test
     public void rejectsTokenThatIsIssuedTooLongTimeAgo() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), String.class);
-        Response response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token, "maxAcceptedAge", Duration.ofNanos(1))));
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), Map.class);
+        Response response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token.get("token"), "maxAcceptedAge", Duration.ofNanos(1))));
         assertThat(response.getStatus()).isEqualTo(422);
         assertThat(response.readEntity(Map.class).get("message").toString()).contains("Token is too old, max allowed=PT0.000000001S actual=");
     }
 
     @Test
     public void jwtWithPreviousProtectionSchemeIsStillValid() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), String.class);
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("my-claim", "is-true", "claim2", "value2"))), Map.class);
         Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "SHA256_BCRYPT")));
         assertThat(updateResponse.getStatusInfo().getFamily()).isEqualTo(Response.Status.Family.SUCCESSFUL);
-        authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token, "requiredClaims", ImmutableMap.of("my-claim", "is-true"))), Map.class);
+        authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token.get("token"), "requiredClaims", ImmutableMap.of("my-claim", "is-true"))), Map.class);
     }
 
     @Test
     public void failsWhenJWTDoesNotContainWantedClaim() {
-        String token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1"))), String.class);
-        Response response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token, "requiredClaims", ImmutableMap.of("my-claim", "is-true"))));
+        Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1"))), Map.class);
+        Response response = authenticatedWebTarget().path("/tokens").request().put(json(ImmutableMap.of("token", token.get("token"), "requiredClaims", ImmutableMap.of("my-claim", "is-true"))));
         assertThat(response.getStatus()).isEqualTo(422);
         assertThat(response.readEntity(Map.class).get("message")).isEqualTo("Wrong value for my-claim required: is-true but was null");
     }

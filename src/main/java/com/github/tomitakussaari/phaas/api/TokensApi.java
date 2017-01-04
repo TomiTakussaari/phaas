@@ -1,6 +1,7 @@
 package com.github.tomitakussaari.phaas.api;
 
 import com.github.tomitakussaari.phaas.model.Tokens.CreateTokenRequest;
+import com.github.tomitakussaari.phaas.model.Tokens.CreateTokenResponse;
 import com.github.tomitakussaari.phaas.model.Tokens.ParseTokenRequest;
 import com.github.tomitakussaari.phaas.model.Tokens.ParseTokenResponse;
 import com.github.tomitakussaari.phaas.user.PhaasUser;
@@ -23,14 +24,15 @@ public class TokensApi {
 
     @ApiOperation(value = "Creates token with given claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.POST)
-    public String generateJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        return jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
+    public CreateTokenResponse generateJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+        JwtHelper.Token token = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
+        return new CreateTokenResponse(token.getId(), token.getToken());
     }
 
     @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")
     @RequestMapping(method = RequestMethod.PUT)
     public ParseTokenResponse parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        JwtHelper.TokenClaims tokenClaims = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
-        return new ParseTokenResponse(tokenClaims.getClaims(), tokenClaims.getIssuedAt());
+        JwtHelper.ParsedToken parsedToken = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
+        return new ParseTokenResponse(parsedToken.getClaims(), parsedToken.getIssuedAt(), parsedToken.getId());
     }
 }

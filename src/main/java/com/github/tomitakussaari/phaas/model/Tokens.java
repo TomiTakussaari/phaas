@@ -24,6 +24,15 @@ public class Tokens {
 
     @RequiredArgsConstructor
     @Getter
+    public static class CreateTokenResponse {
+        @NonNull
+        private final String id;
+        @NonNull
+        private final String token;
+    }
+
+    @RequiredArgsConstructor
+    @Getter
     public static class ParseTokenRequest {
         @NonNull
         private final Optional<Duration> maxAcceptedAge;
@@ -40,5 +49,7 @@ public class Tokens {
         private final Map<String, Object> claims;
         @NonNull
         private final ZonedDateTime issuedAt;
+        @NonNull
+        private final String id;
     }
 }
