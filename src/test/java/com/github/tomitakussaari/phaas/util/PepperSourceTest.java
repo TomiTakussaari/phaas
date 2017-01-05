@@ -35,13 +35,24 @@ public class PepperSourceTest {
     private Environment environment = Mockito.mock(Environment.class);
 
     @Test
-    public void refuesNullUrlFromEnvironment() {
+    public void refusesNullUrlFromEnvironment() {
         when(environment.getProperty(eq("phaas.pepper.source"), any(String.class))).thenReturn(null);
         try {
             new PepperSource(environment);
             fail("should not have succeeded");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(NullPointerException.class).hasMessage("url");
+        }
+    }
+
+    @Test
+    public void refusesInvalidUrlFromEnvironment() {
+        when(environment.getProperty(eq("phaas.pepper.source"), any(String.class))).thenReturn("foobar://barfoo");
+        try {
+            new PepperSource(environment);
+            fail("should not have succeeded");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class).hasMessage("No protocolhandler for foobar://barfoo");
         }
     }
 

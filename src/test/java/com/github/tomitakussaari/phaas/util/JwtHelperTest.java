@@ -5,6 +5,7 @@ import com.github.tomitakussaari.phaas.model.DataProtectionScheme.CryptoData;
 import com.github.tomitakussaari.phaas.user.PhaasUser;
 import com.github.tomitakussaari.phaas.user.UsersService;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -124,9 +125,31 @@ public class JwtHelperTest {
     }
 
     @Test(expected = JwtHelper.JWTException.class)
-    public void refufesTokenThatIsProtectedInUnacceptableWay() {
+    public void refusesTokenThatIsProtectedInUnacceptableWay() {
         String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ";
         jwtHelper.verifyAndGetClaims(userDetails, token, ImmutableMap.of(), Optional.empty());
+    }
+
+    @Test
+    public void refusesToCreateTokenWithTooShortProtectionKey() {
+        when(cryptoData.dataProtectionKey()).thenReturn("]}&P~E8uEAme@");
+        try {
+            jwtHelper.generate(userDetails, ImmutableMap.of(), Optional.empty());
+            fail("should have failed");
+        } catch(JwtHelper.JWTException e) {
+            assertThat(e).hasMessage("The secret length must be at least 256 bits");
+        }
+    }
+
+    @Test
+    public void refusesToCreateTokenWithTooLongProtectionKey() {
+        when(cryptoData.dataProtectionKey()).thenReturn(RandomStringUtils.randomAscii(33));
+        try {
+            jwtHelper.generate(userDetails, ImmutableMap.of(), Optional.empty());
+            fail("should have failed");
+        } catch(JwtHelper.JWTException e) {
+            assertThat(e).hasMessage("The Content Encryption Key length must be 128 bits (16 bytes), 192 bits (24 bytes), 256 bits (32 bytes), 384 bits (48 bytes) or 512 bites (64 bytes)");
+        }
     }
 
     @Test

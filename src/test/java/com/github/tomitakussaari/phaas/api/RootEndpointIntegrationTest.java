@@ -23,6 +23,13 @@ public class RootEndpointIntegrationTest extends IT {
     }
 
     @Test
+    public void queryParametersHaveNoEffect() {
+        Response response = authenticatedWebTarget().path("/").request().get();
+        assertThat(response.getStatus()).isEqualTo(200);
+        response.close();
+    }
+
+    @Test
     public void doesNotReturnsResponseSignatureForUnAuthenticatedUser() {
         Response response = unAuthenticatedWebTarget().path("/").request().get();
         response.close();

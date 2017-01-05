@@ -56,9 +56,7 @@ public class ExceptionAdvisor {
 
     @XmlRootElement
     @AllArgsConstructor
-    @NoArgsConstructor
     @Getter
-    @Setter
     public static class ErrorMessage {
         private String message;
         private String reason;
