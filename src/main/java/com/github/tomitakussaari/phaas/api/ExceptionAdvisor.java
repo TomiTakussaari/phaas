@@ -5,8 +5,6 @@ import com.github.tomitakussaari.phaas.user.SecurityConfig;
 import com.github.tomitakussaari.phaas.util.JwtHelper.JWTException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;

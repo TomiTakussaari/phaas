@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import javax.ws.rs.core.Response;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RootEndpointIntegrationTest extends IT {
@@ -27,6 +29,15 @@ public class RootEndpointIntegrationTest extends IT {
         Response response = authenticatedWebTarget().path("/").request().get();
         assertThat(response.getStatus()).isEqualTo(200);
         response.close();
+    }
+
+    @Test
+    public void returnsErrorMessageForUnknownPage() {
+        Response response = authenticatedWebTarget().path("/does-not-exists").request().get();
+        assertThat(response.getStatus()).isEqualTo(404);
+        Map errorMessage = response.readEntity(Map.class);
+        assertThat(errorMessage).containsEntry("status", 404);
+        assertThat(errorMessage).containsEntry("reason", "Not Found");
     }
 
     @Test
