@@ -5,6 +5,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.github.tomitakussaari.phaas.Application;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.UsersService;
+import com.github.tomitakussaari.phaas.user.dao.UserRepository;
 import com.github.tomitakussaari.phaas.util.JsonHelper;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.junit.After;
@@ -42,6 +43,8 @@ public abstract class IT {
 
     @Autowired
     protected UsersService usersService;
+    @Autowired
+    protected UserRepository userRepository;
 
     @Value("${local.server.port}")
     int port;

@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 public class JwtHelperTest {
 
     private final PhaasUser userDetails = Mockito.mock(PhaasUser.class);
-    private final String secretKey = UsersService.randomKey();
+    private final String secretKey = UsersService.generateEncryptionKey();
     private final CryptoData cryptoData = Mockito.mock(CryptoData.class);
     private final DataProtectionScheme scheme = Mockito.mock(DataProtectionScheme.class);
     private final JwtHelper jwtHelper = new JwtHelper();

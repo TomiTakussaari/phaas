@@ -47,7 +47,7 @@ public class PasswordApiIntegrationTest extends IT {
     public void passwordChangeDoesNotInvalidateOldPasswordHashes() {
         Map hashedPassword = authenticatedWebTarget().path("/passwords/hash").request().put(json(of("rawPassword", PASSWORD)), Map.class);
 
-        Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
+        Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("newPassword", "new-password")));
         assertThat(passwordChangeResponse.getStatus()).isEqualTo(200);
 
         Response response = unAuthenticatedWebTarget().path("/passwords/verify").request()

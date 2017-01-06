@@ -66,25 +66,26 @@ public class UsersService implements UserDetailsService {
                 roles.stream().map(ROLE::getValue).collect(joining(",")),
                 sharedSecretForSigningCommunication);
 
-        UserConfigurationDTO configurationDTO = createUserConfigurationDTO(algorithm, userPassword, randomKey(), userDTO);
+        UserConfigurationDTO configurationDTO = createUserConfigurationDTO(algorithm, userPassword, generateEncryptionKey(), userDTO);
         save(userDTO, configurationDTO);
         return userPassword;
     }
 
     @Transactional
-    public void changePasswordAndSecret(String userName, CharSequence newPassword, CharSequence oldPassword, Optional<String> sharedSecretForSigningCommunication) {
+    public void renewEncryptionKeyProtection(String userName, Optional<CharSequence> newPassword, CharSequence oldPassword, Optional<String> sharedSecretForSigningCommunication) {
         userRepository.findByUserName(userName).ifPresent(user -> {
-            user.setPasswordHash(passwordEncoder().encode(newPassword));
+            CharSequence userPassword = newPassword.orElse(oldPassword);
+            user.setPasswordHash(passwordEncoder().encode(userPassword));
             sharedSecretForSigningCommunication.ifPresent(user::setSharedSecretForSigningCommunication);
 
             List<UserConfigurationDTO> newConfigs = userConfigurationRepository.findByUser(user.getUserName()).stream()
                     .map(currentConfig -> {
                         String protectionKey = currentConfig.toProtectionScheme(cryptoHelper).cryptoData(oldPassword).dataProtectionKey();
-                        return createUserConfigurationDTO(currentConfig.getAlgorithm(), newPassword, protectionKey, user).setId(currentConfig.getId());
+                        return createUserConfigurationDTO(currentConfig.getAlgorithm(), userPassword, protectionKey, user).setId(currentConfig.getId());
                     }).collect(Collectors.toList());
 
             save(user, newConfigs.toArray(new UserConfigurationDTO[]{}));
-            log.info("Updated passwords for {} ", user.getUserName());
+            log.info("Generated new encryption keys for {} ", user.getUserName());
         });
     }
 
@@ -106,12 +107,12 @@ public class UsersService implements UserDetailsService {
         Optional<UserDTO> userMaybe = userRepository.findByUserName(userName);
         userMaybe.ifPresent(userDTO -> {
             userConfigurationRepository.findByUser(userName).forEach(config -> invalidateOrRemove(removeOldSchemes, config));
-            userConfigurationRepository.save(createUserConfigurationDTO(algorithm, userPassword, randomKey(), userDTO));
+            userConfigurationRepository.save(createUserConfigurationDTO(algorithm, userPassword, generateEncryptionKey(), userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
     }
 
-    public static String randomKey() {
+    public static String generateEncryptionKey() {
         return RandomStringUtils.randomAscii(32);
     }
 

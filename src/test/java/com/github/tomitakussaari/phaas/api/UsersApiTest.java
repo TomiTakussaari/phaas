@@ -17,7 +17,7 @@ public class UsersApiTest {
 
     @Test
     public void equalsContractForNewPasswordRequest() {
-        EqualsVerifier.forClass(UsersApi.NewPasswordRequest.class)
+        EqualsVerifier.forClass(UsersApi.ChangePasswordsRequest.class)
                 .suppress(Warning.NONFINAL_FIELDS, Warning.NULL_FIELDS, Warning.STRICT_INHERITANCE)
                 .verify();
     }
@@ -50,7 +50,7 @@ public class UsersApiTest {
     @Test(expected = OperationIsNotAvailableException.class)
     public void passwordChangeCanBePreventedWithConfiguration() {
         when(environment.getProperty("immutable.users.db", Boolean.class)).thenReturn(true);
-        usersApi.changePassword(null, null);
+        usersApi.changePasswords(null, null);
     }
 
 }

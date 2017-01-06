@@ -27,7 +27,7 @@ public class TokensApiIntegrationTest extends IT {
     public void jsonWebTokenCanBeValidatedAfterPasswordChange() {
         Map token = authenticatedWebTarget().path("/tokens").request().post(json(ImmutableMap.of("claims", ImmutableMap.of("claim1", "value1", "claim2", "value2"))), Map.class);
 
-        Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("password", "new-password")));
+        Response passwordChangeResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("newPassword", "new-password")));
         assertThat(passwordChangeResponse.getStatus()).isEqualTo(200);
 
         Map response = unAuthenticatedWebTarget().path("/tokens").request()

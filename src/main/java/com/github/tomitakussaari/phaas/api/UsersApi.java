@@ -1,7 +1,7 @@
 package com.github.tomitakussaari.phaas.api;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
+import com.github.tomitakussaari.phaas.model.DataProtectionScheme.PublicProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.user.PhaasUser;
 import com.github.tomitakussaari.phaas.user.UsersService;
@@ -35,12 +35,12 @@ public class UsersApi {
         return toPublicUser(userDetails);
     }
 
-    @ApiOperation(value = "Changes user password.")
+    @ApiOperation(value = "Changes newPassword")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, produces = "application/json", path = "/me")
-    public void changePassword(@RequestBody NewPasswordRequest newPasswordRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+    public void changePasswords(@RequestBody ChangePasswordsRequest changePasswordsRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         rejectIfUserDatabaseIsImmutable();
-        usersService.changePasswordAndSecret(userDetails.getUsername(), newPasswordRequest.getPassword(), userDetails.findCurrentUserPassword(), newPasswordRequest.getSharedSecretForSigningCommunication());
+        usersService.renewEncryptionKeyProtection(userDetails.getUsername(), changePasswordsRequest.getNewPassword(), userDetails.findCurrentUserPassword(), changePasswordsRequest.getSharedSecretForSigningCommunication());
     }
 
     @ApiOperation(value = "Creates new user, only usable by admins")
@@ -89,8 +89,10 @@ public class UsersApi {
     }
 
     @Data
-    static class NewPasswordRequest {
-        private final String password;
+    static class ChangePasswordsRequest {
+        @NonNull
+        private final Optional<CharSequence> newPassword;
+        @NonNull
         private final Optional<String> sharedSecretForSigningCommunication;
     }
 
@@ -99,11 +101,11 @@ public class UsersApi {
     static class PublicUser {
         private final String userName;
         private final List<UsersService.ROLE> roles;
-        private final DataProtectionScheme.PublicProtectionScheme currentProtectionScheme;
-        private final List<DataProtectionScheme.PublicProtectionScheme> supportedProtectionSchemes;
+        private final PublicProtectionScheme currentProtectionScheme;
+        private final List<PublicProtectionScheme> supportedProtectionSchemes;
     }
 
-    @RequiredArgsConstructor(onConstructor = @__(@JsonCreator))
+    @RequiredArgsConstructor
     @Getter
     static class ProtectionSchemeRequest {
         @NonNull
@@ -111,7 +113,7 @@ public class UsersApi {
         private final boolean removeOldSchemes;
     }
 
-    @RequiredArgsConstructor(onConstructor = @__(@JsonCreator))
+    @RequiredArgsConstructor
     @Getter
     static class CreateUserRequest {
         @NonNull
