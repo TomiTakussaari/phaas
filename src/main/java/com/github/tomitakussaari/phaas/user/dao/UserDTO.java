@@ -2,7 +2,6 @@ package com.github.tomitakussaari.phaas.user.dao;
 
 import lombok.*;
 import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
