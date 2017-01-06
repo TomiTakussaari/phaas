@@ -3,9 +3,7 @@ package com.github.tomitakussaari.phaas.user.dao;
 import com.github.tomitakussaari.phaas.model.DataProtectionScheme;
 import com.github.tomitakussaari.phaas.model.PasswordEncodingAlgorithm;
 import com.github.tomitakussaari.phaas.util.CryptoHelper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -13,10 +11,11 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "user_configuration")
-@Data
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
+@Getter
 public final class UserConfigurationDTO implements Serializable {
 
     @Id

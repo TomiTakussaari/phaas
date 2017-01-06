@@ -1,10 +1,8 @@
 package com.github.tomitakussaari.phaas.user.dao;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
@@ -13,11 +11,12 @@ import java.util.Arrays;
 import java.util.List;
 
 @Entity
-@Data
 @Table(name = "user")
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
+@Getter
+@Setter
 public final class UserDTO implements Serializable {
 
     @Id

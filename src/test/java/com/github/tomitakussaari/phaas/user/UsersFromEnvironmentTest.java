@@ -37,7 +37,7 @@ public class UsersFromEnvironmentTest {
         UsersFromEnvironment usersFromEnvironment = new UsersFromEnvironment(usersService, environment);
         usersFromEnvironment.initializeDatabase();
 
-        verify(usersService).save(userDTO, configurationDTO1, configurationDTO2);
+        verify(usersService).save(refEq(userDTO), refEq(configurationDTO1), refEq(configurationDTO2));
     }
 
     @Test
@@ -46,7 +46,7 @@ public class UsersFromEnvironmentTest {
         UsersFromEnvironment.UserData dataFromString = UsersFromEnvironment.UserData.deSerialize(serializedData).get(0);
 
         assertThat(serializedData).isEqualTo(serializedFrom);
-        assertThat(dataFromString).isEqualTo(dataFromDTOs);
+        assertThat(dataFromString).isEqualToComparingFieldByFieldRecursively(dataFromDTOs);
     }
 
     @Test

@@ -88,7 +88,8 @@ public class UsersApi {
         }
     }
 
-    @Data
+    @Getter
+    @RequiredArgsConstructor
     static class ChangePasswordsRequest {
         @NonNull
         private final Optional<CharSequence> newPassword;
@@ -96,7 +97,8 @@ public class UsersApi {
         private final Optional<String> sharedSecretForSigningCommunication;
     }
 
-    @Data
+    @Getter
+    @RequiredArgsConstructor
     @Builder
     static class PublicUser {
         private final String userName;
