@@ -33,7 +33,7 @@ public class JwtHelperTest {
         when(userDetails.currentlyActiveCryptoData()).thenReturn(cryptoData);
         when(userDetails.getUsername()).thenReturn("my-user");
         when(userDetails.cryptoDataForId(1)).thenReturn(cryptoData);
-        when(cryptoData.dataProtectionKey()).thenReturn(secretKey);
+        when(cryptoData.getDataProtectionKey()).thenReturn(secretKey);
         when(cryptoData.getScheme()).thenReturn(scheme);
         when(scheme.getId()).thenReturn(1);
     }
@@ -132,7 +132,7 @@ public class JwtHelperTest {
 
     @Test
     public void refusesToCreateTokenWithTooShortProtectionKey() {
-        when(cryptoData.dataProtectionKey()).thenReturn("]}&P~E8uEAme@");
+        when(cryptoData.getDataProtectionKey()).thenReturn("]}&P~E8uEAme@");
         try {
             jwtHelper.generate(userDetails, ImmutableMap.of(), Optional.empty());
             fail("should have failed");
@@ -143,7 +143,7 @@ public class JwtHelperTest {
 
     @Test
     public void refusesToCreateTokenWithTooLongProtectionKey() {
-        when(cryptoData.dataProtectionKey()).thenReturn(RandomStringUtils.randomAscii(33));
+        when(cryptoData.getDataProtectionKey()).thenReturn(RandomStringUtils.randomAscii(33));
         try {
             jwtHelper.generate(userDetails, ImmutableMap.of(), Optional.empty());
             fail("should have failed");
@@ -154,7 +154,7 @@ public class JwtHelperTest {
 
     @Test
     public void canParseExistingToken() {
-        when(cryptoData.dataProtectionKey()).thenReturn("CJ;h*ywnWV4t9_+BN?~]}&P~E8uEAme@");
+        when(cryptoData.getDataProtectionKey()).thenReturn("CJ;h*ywnWV4t9_+BN?~]}&P~E8uEAme@");
         String oldToken = "eyJ6aXAiOiJERUYiLCJraWQiOiIxIiwiY3R5IjoiSldUIiwiZW5jIjoiQTI1NkdDTSIsImFsZyI6ImRpciJ9..auZ902bJ1qNGS0P-.UO1SFi3qtsknfORNjL5Hp0bq1nzy4TpCOHzI7K-gtoKrTC5xVqkJB-kOzB_lnPnYsYo2x_Z375T5HVRa8N9uxoFUvx0naDDznKwvt3CvgiWqEgA4E0Hyg4EyqMKiazVKeN9zpH-cMtd6VjCcziXfXBi_iMhvUyeZMJANZUg1BfgOU0K1cjR_jc_LrRiMv7Bcy0Y3ygV2NheiNULqBj5Ob6xg8trgoIp_-F5NbQ.vzIhXbpCESR4EjGekJEQgA";
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
         jwtHelper.verifyAndGetClaims(userDetails, oldToken, claims, Optional.empty());
@@ -162,7 +162,7 @@ public class JwtHelperTest {
 
     @Test
     public void refusesToParseTokenWithInvalidKey() {
-        when(cryptoData.dataProtectionKey()).thenReturn("AJ;h*ywnWV4t9_+BN?~]}&P~E8uEAme@");
+        when(cryptoData.getDataProtectionKey()).thenReturn("AJ;h*ywnWV4t9_+BN?~]}&P~E8uEAme@");
         String oldToken = "eyJ6aXAiOiJERUYiLCJraWQiOiIxIiwiY3R5IjoiSldUIiwiZW5jIjoiQTI1NkdDTSIsImFsZyI6ImRpciJ9..auZ902bJ1qNGS0P-.UO1SFi3qtsknfORNjL5Hp0bq1nzy4TpCOHzI7K-gtoKrTC5xVqkJB-kOzB_lnPnYsYo2x_Z375T5HVRa8N9uxoFUvx0naDDznKwvt3CvgiWqEgA4E0Hyg4EyqMKiazVKeN9zpH-cMtd6VjCcziXfXBi_iMhvUyeZMJANZUg1BfgOU0K1cjR_jc_LrRiMv7Bcy0Y3ygV2NheiNULqBj5Ob6xg8trgoIp_-F5NbQ.vzIhXbpCESR4EjGekJEQgA";
         ImmutableMap<String, Object> claims = ImmutableMap.of("claim1", "value1");
         try {

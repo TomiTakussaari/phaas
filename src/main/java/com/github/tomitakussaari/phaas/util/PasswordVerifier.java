@@ -14,7 +14,7 @@ public class PasswordVerifier {
     private final PasswordHasher passwordReHasher = new PasswordHasher();
 
     public PasswordVerifyResult verify(PasswordVerifyRequest request, CryptoData schemeForRequest, CryptoData activeSchemeForUser) {
-        TextEncryptor decryptor = Encryptors.text(schemeForRequest.dataProtectionKey(), request.encryptionSalt());
+        TextEncryptor decryptor = Encryptors.text(schemeForRequest.getDataProtectionKey(), request.encryptionSalt());
         String hashedPassword = decryptor.decrypt(request.encryptedPasswordHash());
         boolean passwordValid = schemeForRequest.getScheme().passwordEncoder().matches(request.getPasswordCandidate(), hashedPassword);
         Optional<String> upgradedHash = getUpgradedHash(request, schemeForRequest, activeSchemeForUser, passwordValid);

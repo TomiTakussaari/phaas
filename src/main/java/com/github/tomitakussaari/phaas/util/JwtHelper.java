@@ -26,9 +26,9 @@ import static java.time.LocalDateTime.now;
 public class JwtHelper {
 
     private static SignedJWT decryptAndVerifySignature(JWEObject jweObject, CryptoData cryptoData) throws JOSEException {
-        jweObject.decrypt(new DirectDecrypter(cryptoData.dataProtectionKey().getBytes()));
+        jweObject.decrypt(new DirectDecrypter(cryptoData.getDataProtectionKey().getBytes()));
         SignedJWT signedJWT = jweObject.getPayload().toSignedJWT();
-        checkArgument(signedJWT.verify(new MACVerifier(cryptoData.dataProtectionKey().getBytes())), "Signature was not valid");
+        checkArgument(signedJWT.verify(new MACVerifier(cryptoData.getDataProtectionKey().getBytes())), "Signature was not valid");
         return signedJWT;
     }
 
@@ -47,7 +47,7 @@ public class JwtHelper {
     }
 
     private static SignedJWT signedToken(CryptoData cryptoData, Builder claimSetBuilder) throws JOSEException {
-        JWSSigner signer = new MACSigner(cryptoData.dataProtectionKey().getBytes());
+        JWSSigner signer = new MACSigner(cryptoData.getDataProtectionKey().getBytes());
         SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimSetBuilder.build());
         signedJWT.sign(signer);
         return signedJWT;
@@ -61,7 +61,7 @@ public class JwtHelper {
                         .contentType("Tokens")
                         .build(),
                 new Payload(signedJWT));
-        jweObject.encrypt(new DirectEncrypter(cryptoData.dataProtectionKey().getBytes()));
+        jweObject.encrypt(new DirectEncrypter(cryptoData.getDataProtectionKey().getBytes()));
         return jweObject;
     }
 

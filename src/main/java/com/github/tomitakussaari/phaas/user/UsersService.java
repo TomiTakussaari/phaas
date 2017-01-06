@@ -80,7 +80,7 @@ public class UsersService implements UserDetailsService {
 
             List<UserConfigurationDTO> newConfigs = userConfigurationRepository.findByUser(user.getUserName()).stream()
                     .map(currentConfig -> {
-                        String protectionKey = currentConfig.toProtectionScheme(cryptoHelper).cryptoData(oldPassword).dataProtectionKey();
+                        String protectionKey = currentConfig.toProtectionScheme(cryptoHelper).cryptoData(oldPassword).getDataProtectionKey();
                         return createUserConfigurationDTO(currentConfig.getAlgorithm(), userPassword, protectionKey, user).setId(currentConfig.getId());
                     }).collect(Collectors.toList());
 

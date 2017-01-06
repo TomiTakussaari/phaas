@@ -38,13 +38,14 @@ public class DataProtectionScheme {
     public static class CryptoData {
         private final DataProtectionScheme scheme;
         private final CharSequence userPassword;
-
+        @Getter(lazy = true)
+        private final String dataProtectionKey  = dataProtectionKey();
 
         public DataProtectionScheme getScheme() {
             return scheme;
         }
 
-        public String dataProtectionKey() {
+        private String dataProtectionKey() {
             return scheme.cryptoHelper.decryptData(userPassword, scheme.getEncryptedKeyWithSalt());
         }
     }
