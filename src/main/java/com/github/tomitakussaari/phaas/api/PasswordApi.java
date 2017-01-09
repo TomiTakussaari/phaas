@@ -30,7 +30,7 @@ public class PasswordApi {
     private final PasswordVerifier passwordVerifier;
     private final PasswordHasher passwordHasher;
 
-    @ApiOperation(value = "Protects password and returns hash from it")
+    @ApiOperation(value = "Hashes and protects password")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
     public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {

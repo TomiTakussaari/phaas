@@ -22,15 +22,15 @@ public class TokensApi {
 
     private final JwtHelper jwtHelper = new JwtHelper();
 
-    @ApiOperation(value = "Creates token with given claims (jwt)", consumes = "application/json")
-    @RequestMapping(method = RequestMethod.POST)
-    public CreateTokenResponse generateJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+    @ApiOperation(value = "Creates token with given claims and validity", consumes = "application/json")
+    @RequestMapping(method = RequestMethod.POST, path = "/create")
+    public CreateTokenResponse createJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
         return new CreateTokenResponse(createdToken.getId(), createdToken.getToken());
     }
 
-    @ApiOperation(value = "Verifies token and returns claims (jwt)", consumes = "application/json")
-    @RequestMapping(method = RequestMethod.PUT)
+    @ApiOperation(value = "Parses and validates token and returns it's claims", consumes = "application/json")
+    @RequestMapping(method = RequestMethod.PUT, path = "/parse")
     public ParseTokenResponse parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         JwtHelper.ParsedToken parsedToken = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
         return new ParseTokenResponse(parsedToken.getClaims(), parsedToken.getIssuedAt(), parsedToken.getId());
