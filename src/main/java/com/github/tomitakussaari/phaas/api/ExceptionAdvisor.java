@@ -5,6 +5,7 @@ import com.github.tomitakussaari.phaas.user.SecurityConfig;
 import com.github.tomitakussaari.phaas.util.JwtHelper.JWTException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -55,6 +56,7 @@ public class ExceptionAdvisor {
     @XmlRootElement
     @AllArgsConstructor
     @Getter
+    @NoArgsConstructor
     public static class ErrorMessage {
         private String message;
         private String reason;
