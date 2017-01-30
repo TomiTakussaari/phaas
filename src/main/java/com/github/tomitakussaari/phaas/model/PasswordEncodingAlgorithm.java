@@ -23,10 +23,6 @@ public enum PasswordEncodingAlgorithm {
         this.encoderSupplier = encoderSupplier;
     }
 
-    public PasswordEncoder encoder() {
-        return encoderSupplier.get();
-    }
-
     public static Optional<PasswordEncodingAlgorithm> findForHash(String hash) {
         for (PasswordEncodingAlgorithm algorithm : values()) {
             if (hash.startsWith(algorithm.hashPrefix)) {
@@ -34,6 +30,10 @@ public enum PasswordEncodingAlgorithm {
             }
         }
         return Optional.empty();
+    }
+
+    public PasswordEncoder encoder() {
+        return encoderSupplier.get();
     }
 }
 
@@ -58,6 +58,10 @@ class SHA256AndBCryptPasswordEncoder extends BCryptPasswordEncoder {
         super(11);
     }
 
+    static String sha256hex(CharSequence toHash) {
+        return Hashing.sha256().hashString(toHash, StandardCharsets.UTF_8).toString();
+    }
+
     @Override
     public String encode(CharSequence rawPassword) {
         return super.encode(sha256hex(rawPassword));
@@ -66,9 +70,5 @@ class SHA256AndBCryptPasswordEncoder extends BCryptPasswordEncoder {
     @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
         return super.matches(sha256hex(rawPassword), encodedPassword);
-    }
-
-    static String sha256hex(CharSequence toHash) {
-        return Hashing.sha256().hashString(toHash, StandardCharsets.UTF_8).toString();
     }
 }

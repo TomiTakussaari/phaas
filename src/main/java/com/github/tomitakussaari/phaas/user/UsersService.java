@@ -62,7 +62,7 @@ public class UsersService implements UserDetailsService {
     }
 
     public String createUser(String userName, PasswordEncodingAlgorithm algorithm, List<ROLE> roles, String userPassword, String sharedSecretForSigningCommunication) {
-        UserDTO userDTO = new UserDTO(null, userName, passwordEncoder().encode(userPassword),
+        UserDTO userDTO = new UserDTO(null, userName,
                 roles.stream().map(ROLE::getValue).collect(joining(",")),
                 sharedSecretForSigningCommunication);
 
@@ -75,7 +75,6 @@ public class UsersService implements UserDetailsService {
     public void renewEncryptionKeyProtection(String userName, Optional<CharSequence> newPassword, CharSequence oldPassword, Optional<String> sharedSecretForSigningCommunication) {
         userRepository.findByUserName(userName).ifPresent(user -> {
             CharSequence userPassword = newPassword.orElse(oldPassword);
-            user.setPasswordHash(passwordEncoder().encode(userPassword));
             sharedSecretForSigningCommunication.ifPresent(user::setSharedSecretForSigningCommunication);
 
             List<UserConfigurationDTO> newConfigs = userConfigurationRepository.findByUser(user.getUserName()).stream()
@@ -87,10 +86,6 @@ public class UsersService implements UserDetailsService {
             save(user, newConfigs.toArray(new UserConfigurationDTO[]{}));
             log.info("Generated new encryption keys for {} ", user.getUserName());
         });
-    }
-
-    public PasswordEncoder passwordEncoder() {
-        return new UserPasswordEncoder();
     }
 
     @Transactional

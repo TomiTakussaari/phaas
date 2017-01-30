@@ -63,7 +63,7 @@ public class PhaasUser implements UserDetails {
 
     @Override
     public String getPassword() {
-        return userDTO.getPasswordHash();
+        return activeProtectionScheme().getEncryptedKeyWithSalt();
     }
 
     @Override

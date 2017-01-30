@@ -44,17 +44,6 @@ public class UsersApiIntegrationTest extends IT {
     }
 
     @Test
-    public void passwordChangeRequestWithoutNewPasswordWillRehashUserPassword() {
-        String oldPwHash = userRepository.findByUserName(USER_NAME).get().getPasswordHash();
-        Response updateResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of()));
-        assertThat(updateResponse.getStatus()).isEqualTo(200);
-        Response responseWithOldPassword = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get();
-        assertThat(responseWithOldPassword.getStatus()).isEqualTo(200);
-        String newPwHash = userRepository.findByUserName(USER_NAME).get().getPasswordHash();
-        assertThat(oldPwHash).isNotEqualTo(newPwHash);
-    }
-
-    @Test
     public void changesResponseSigningKey() {
         Response updateResponse = authenticatedWebTarget().path("/users/me").request().put(Entity.json(of("newPassword", USER_PASSWORD, "sharedSecretForSigningCommunication", "sign-key")));
         assertThat(updateResponse.getStatus()).isEqualTo(200);

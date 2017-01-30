@@ -25,8 +25,6 @@ public final class UserDTO implements Serializable {
     @NaturalId
     private String userName;
     @NonNull
-    private String passwordHash;
-    @NonNull
     private String roles;
 
     private String sharedSecretForSigningCommunication;

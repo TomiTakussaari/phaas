@@ -2,6 +2,7 @@ package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.util.JsonHelper;
 import io.dropwizard.servlets.ThreadNameFilter;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -12,13 +13,19 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -45,18 +52,16 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
-    @Autowired
-    private UsersService usersService;
+    private final UsersService usersService;
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.eraseCredentials(false)
-                .userDetailsService(usersService)
-                .passwordEncoder(usersService.passwordEncoder());
+        auth.authenticationProvider(new PhaasAuthenticator(usersService)).eraseCredentials(false);
     }
 
     @Override
@@ -87,6 +92,31 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         registrationBean.setFilter(filter);
         registrationBean.setOrder(0);
         return registrationBean;
+    }
+
+    @RequiredArgsConstructor
+    static class PhaasAuthenticator extends AbstractUserDetailsAuthenticationProvider {
+        private final UsersService usersService;
+
+        @Override
+        protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+            String passwordCandidate = authentication.getCredentials().toString();
+            PhaasUser phaasUser = (PhaasUser) userDetails;
+            try {
+                String dataProtectionKey = phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey();
+                if(dataProtectionKey == null) {
+                    throw new BadCredentialsException("invalid credentials");
+                }
+            } catch(IllegalStateException e) {
+                throw new BadCredentialsException("invalid credentials", e);
+            }
+        }
+
+        @Override
+        protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+            return usersService.loadUserByUsername(username);
+        }
+
     }
 
     @ControllerAdvice
