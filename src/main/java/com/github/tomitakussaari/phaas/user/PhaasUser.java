@@ -63,7 +63,7 @@ public class PhaasUser implements UserDetails {
 
     @Override
     public String getPassword() {
-        return activeProtectionScheme().getEncryptedKeyWithSalt();
+        throw new UnsupportedOperationException("Not to be called");
     }
 
     @Override

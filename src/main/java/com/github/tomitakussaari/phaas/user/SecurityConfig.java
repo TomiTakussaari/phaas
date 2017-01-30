@@ -40,10 +40,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static com.github.tomitakussaari.phaas.user.SecurityConfig.AuditAndLoggingFilter.X_REQUEST_ID;
 import static java.util.Optional.ofNullable;
@@ -103,12 +100,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             String passwordCandidate = authentication.getCredentials().toString();
             PhaasUser phaasUser = (PhaasUser) userDetails;
             try {
-                String dataProtectionKey = phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey();
-                if(dataProtectionKey == null) {
-                    throw new BadCredentialsException("invalid credentials");
-                }
-            } catch(IllegalStateException e) {
-                throw new BadCredentialsException("invalid credentials", e);
+                Objects.nonNull(phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey());
+            } catch(IllegalStateException keyDecryptFailed) {
+                throw new BadCredentialsException("invalid credentials", keyDecryptFailed);
             }
         }
 

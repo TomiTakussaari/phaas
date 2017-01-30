@@ -3,6 +3,7 @@ package com.github.tomitakussaari.phaas.api;
 import com.github.tomitakussaari.phaas.user.SecurityConfig;
 import org.junit.Test;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import java.util.Map;
@@ -10,6 +11,11 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RootEndpointIntegrationTest extends IT {
+
+    @Test
+    public void errorPath() {
+        assertThat(new RootEndpoint().getErrorPath()).isEqualTo("/error");
+    }
 
     @Test
     public void showsWelcomePageForAllUsers() {
@@ -38,6 +44,15 @@ public class RootEndpointIntegrationTest extends IT {
         Map errorMessage = response.readEntity(Map.class);
         assertThat(errorMessage).containsEntry("status", 404);
         assertThat(errorMessage).containsEntry("reason", "Not Found");
+    }
+
+    @Test
+    public void returnsErrorMessageForUnknownPageInXml() {
+        Response response = authenticatedWebTarget().path("/does-not-exists").request().accept(MediaType.APPLICATION_XML).get();
+        assertThat(response.getStatus()).isEqualTo(404);
+        String errorMessage = response.readEntity(String.class);
+        assertThat(errorMessage).contains("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><errorMessage>");
+        assertThat(errorMessage).contains("<status>404</status>");
     }
 
     @Test
