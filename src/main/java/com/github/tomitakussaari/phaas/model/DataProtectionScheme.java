@@ -23,7 +23,7 @@ public class DataProtectionScheme {
     private final CryptoHelper cryptoHelper;
 
     public PasswordEncoder passwordEncoder() {
-        return algorithm.encoder();
+        return getAlgorithm().encoder();
     }
 
     public PublicProtectionScheme toPublicScheme() {
@@ -46,7 +46,7 @@ public class DataProtectionScheme {
         }
 
         private String dataProtectionKey() {
-            return scheme.cryptoHelper.decryptData(userPassword, scheme.getEncryptedKeyWithSalt());
+            return scheme.getCryptoHelper().decryptData(userPassword, scheme.getEncryptedKeyWithSalt());
         }
     }
 
