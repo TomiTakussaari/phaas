@@ -22,7 +22,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -95,7 +94,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         private final UsersService usersService;
 
         @Override
-        protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+        protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) {
             String passwordCandidate = authentication.getCredentials().toString();
             PhaasUser phaasUser = (PhaasUser) userDetails;
             try {
@@ -106,7 +105,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         }
 
         @Override
-        protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+        protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) {
             return usersService.loadUserByUsername(username);
         }
 
