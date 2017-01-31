@@ -1,6 +1,7 @@
 package com.github.tomitakussaari.phaas.user;
 
 import com.github.tomitakussaari.phaas.util.JsonHelper;
+import com.google.common.base.Preconditions;
 import io.dropwizard.servlets.ThreadNameFilter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -98,7 +99,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             String passwordCandidate = authentication.getCredentials().toString();
             PhaasUser phaasUser = (PhaasUser) userDetails;
             try {
-                Objects.nonNull(phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey());
+                Preconditions.checkState(phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey() != null);
             } catch (IllegalStateException keyDecryptFailed) {
                 throw new BadCredentialsException("invalid credentials", keyDecryptFailed);
             }
