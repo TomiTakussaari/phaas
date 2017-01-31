@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +36,10 @@ public class UsersService implements UserDetailsService {
     private final UserConfigurationRepository userConfigurationRepository;
     private final UserRepository userRepository;
     private final CryptoHelper cryptoHelper;
+
+    public static String generateEncryptionKey() {
+        return RandomStringUtils.randomAscii(32);
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) {
@@ -105,10 +108,6 @@ public class UsersService implements UserDetailsService {
             userConfigurationRepository.save(createUserConfigurationDTO(algorithm, userPassword, generateEncryptionKey(), userDTO));
             log.info("Updated default algorithm for {} to {}", userDTO.getUserName(), algorithm);
         });
-    }
-
-    public static String generateEncryptionKey() {
-        return RandomStringUtils.randomAscii(32);
     }
 
     private void invalidateOrRemove(Boolean removeOldSchemes, UserConfigurationDTO config) {

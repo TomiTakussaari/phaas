@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
@@ -101,7 +100,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             PhaasUser phaasUser = (PhaasUser) userDetails;
             try {
                 Objects.nonNull(phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey());
-            } catch(IllegalStateException keyDecryptFailed) {
+            } catch (IllegalStateException keyDecryptFailed) {
                 throw new BadCredentialsException("invalid credentials", keyDecryptFailed);
             }
         }
