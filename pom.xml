@@ -242,9 +242,7 @@
                     <forceTags>true</forceTags>
                     <imageName>${project.groupId}-${project.artifactId}</imageName>
                     <baseImage>openjdk:8-jdk-alpine</baseImage>
-                    <entryPoint>["java", "-XX:+ExitOnOutOfMemoryError", "-Djava.security.egd=file:/dev/./urandom",
-                        "-jar", "/${project.build.finalName}.jar"]
-                    </entryPoint>
+                    <entryPoint>["java", "-XX:+ExitOnOutOfMemoryError", "-Djava.security.egd=file:/dev/./urandom","-jar", "/${project.build.finalName}.jar"]</entryPoint>
                     <resources>
                         <resource>
                             <targetPath>/</targetPath>

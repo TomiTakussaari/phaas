@@ -115,7 +115,17 @@ immutable.users.db = true
 phaas.pepper.source = string://secret-pepper # could also be file://secret.txt or https://my-http-server/secret|my-custom-header=header-value&my-other-custom-header=value2
 
 ```
+
+
+### Docker
+
+Build:
+    
+    mvn docker:build
  
+Run:
+
+    docker run -p 127.0.0.1:8080:8080 com.github.tomitakussaari-phaas
 
 
 
