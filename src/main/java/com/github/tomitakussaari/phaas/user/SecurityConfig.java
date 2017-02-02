@@ -1,8 +1,10 @@
 package com.github.tomitakussaari.phaas.user;
 
+import com.github.tomitakussaari.phaas.util.CryptoHelper;
 import com.github.tomitakussaari.phaas.util.JsonHelper;
 import com.google.common.base.Preconditions;
 import io.dropwizard.servlets.ThreadNameFilter;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -54,10 +57,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
 
     private final UsersService usersService;
+    private final CryptoHelper cryptoHelper;
+
+    protected static final String userNotFoundPassword = "userNotFoundPassword";
+    @Getter(lazy = true)
+    private final String userNotFoundCryptedData = createUserNotFoundPassword();
+
+    private String createUserNotFoundPassword() {
+        return cryptoHelper.encryptData(userNotFoundPassword, "foobar");
+    }
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.authenticationProvider(new PhaasAuthenticator(usersService)).eraseCredentials(false);
+        auth.authenticationProvider(new PhaasAuthenticator(usersService, cryptoHelper, getUserNotFoundCryptedData())).eraseCredentials(false);
     }
 
     @Override
@@ -93,10 +105,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @RequiredArgsConstructor
     static class PhaasAuthenticator extends AbstractUserDetailsAuthenticationProvider {
         private final UsersService usersService;
+        private final CryptoHelper cryptoHelper;
+        private final String userNotFoundCryptedData;
 
         @Override
         protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) {
-            String passwordCandidate = authentication.getCredentials().toString();
+            String passwordCandidate = Optional.ofNullable(authentication.getCredentials()).map(Object::toString).orElse("");
             PhaasUser phaasUser = (PhaasUser) userDetails;
             try {
                 Preconditions.checkState(phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey() != null);
@@ -107,9 +121,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         @Override
         protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) {
-            return usersService.loadUserByUsername(username);
+            try {
+                return usersService.loadUserByUsername(username);
+            } catch (UsernameNotFoundException notFound) {
+                //run "password check"
+                cryptoHelper.decryptData(userNotFoundPassword, userNotFoundCryptedData);
+                throw notFound;
+            }
         }
-
     }
 
     @ControllerAdvice

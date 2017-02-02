@@ -24,6 +24,14 @@ public class UsersApiIntegrationTest extends IT {
     }
 
     @Test
+    public void cantFindCurrentUserWithWrongPassword() {
+        Response response = unAuthenticatedWebTarget().path("/users/me").request()
+                .header("Authorization", basicAuth(USER_NAME, USER_PASSWORD + "a")).accept(MediaType.APPLICATION_JSON)
+                .get();
+        assertThat(response.getStatus()).isEqualTo(401);
+    }
+
+    @Test
     public void updatesProtectionScheme() {
         Map currentUserWithOldScheme = authenticatedWebTarget().path("/users/me").request().accept(MediaType.APPLICATION_JSON).get(Map.class);
         Response updateResponse = authenticatedWebTarget().path("/users/me/scheme").request().post(Entity.json(of("algorithm", "SHA256_BCRYPT")));

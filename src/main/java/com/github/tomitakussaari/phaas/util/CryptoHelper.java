@@ -22,7 +22,8 @@ public class CryptoHelper {
         Version encryptVersion = Version.defaultVersion();
         String salt = KeyGenerators.string().generateKey();
         String pepperedPassword = password+"."+ pepperSource.getPepper();
-        return encryptVersion.name() + TOKEN_VALUE_SEPARATOR + salt + TOKEN_VALUE_SEPARATOR + encryptVersion.encryptor(pepperedPassword, salt).encrypt(dataToEncrypt);
+        String encryptedData = encryptVersion.encryptor(pepperedPassword, salt).encrypt(dataToEncrypt);
+        return encryptVersion.name() + TOKEN_VALUE_SEPARATOR + salt + TOKEN_VALUE_SEPARATOR + encryptedData;
     }
 
     public String decryptData(CharSequence password, String encryptedData) {
