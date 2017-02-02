@@ -15,7 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @Accessors(chain = true)
 @Getter
-@Setter
 public final class UserDTO implements Serializable {
 
     @Id
@@ -26,7 +25,7 @@ public final class UserDTO implements Serializable {
     private String userName;
     @NonNull
     private String roles;
-
+    @Setter
     private String sharedSecretForSigningCommunication;
 
     public List<String> roles() {
