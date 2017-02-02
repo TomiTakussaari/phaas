@@ -55,17 +55,13 @@ import static org.apache.commons.lang3.StringUtils.trimToNull;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final List<String> UNSECURE_ENDPOINTS = Arrays.asList("/swagger-ui.html", "/webjars/", "/swagger-resources", "/v2/api-docs");
+    static final String USER_NOT_FOUND_PASSWORD = "userNotFoundPassword";
 
     private final UsersService usersService;
     private final CryptoHelper cryptoHelper;
 
-    protected static final String userNotFoundPassword = "userNotFoundPassword";
     @Getter(lazy = true)
-    private final String userNotFoundCryptedData = createUserNotFoundPassword();
-
-    private String createUserNotFoundPassword() {
-        return cryptoHelper.encryptData(userNotFoundPassword, "foobar");
-    }
+    private final String userNotFoundCryptedData = createUserNotFoundCryptedData();
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -125,7 +121,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 return usersService.loadUserByUsername(username);
             } catch (UsernameNotFoundException notFound) {
                 //run "password check"
-                cryptoHelper.decryptData(userNotFoundPassword, userNotFoundCryptedData);
+                cryptoHelper.decryptData(USER_NOT_FOUND_PASSWORD, userNotFoundCryptedData);
                 throw notFound;
             }
         }
@@ -162,6 +158,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             }
             return body;
         }
+    }
+
+    private String createUserNotFoundCryptedData() {
+        return cryptoHelper.encryptData(USER_NOT_FOUND_PASSWORD, "some-data");
     }
 
     public static class AuditAndLoggingFilter extends OncePerRequestFilter {

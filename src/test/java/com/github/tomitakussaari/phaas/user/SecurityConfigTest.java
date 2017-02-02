@@ -11,7 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import static com.github.tomitakussaari.phaas.user.SecurityConfig.userNotFoundPassword;
+import static com.github.tomitakussaari.phaas.user.SecurityConfig.USER_NOT_FOUND_PASSWORD;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,7 +21,7 @@ public class SecurityConfigTest {
     private final UsersService usersService = Mockito.mock(UsersService.class);
     private final CryptoHelper mockCryptoHelper = Mockito.mock(CryptoHelper.class);
     private final CryptoHelper cryptoHelper = new CryptoHelper(new PepperSource("foo"));
-    private final String userNotFoundCryptedData = cryptoHelper.encryptData(userNotFoundPassword, "data");
+    private final String userNotFoundCryptedData = cryptoHelper.encryptData(USER_NOT_FOUND_PASSWORD, "data");
     private final UsernamePasswordAuthenticationToken authenticationToken = Mockito.mock(UsernamePasswordAuthenticationToken.class);
     private final String encryptedData = cryptoHelper.encryptData("correct-password", "my-data");
     private final DataProtectionScheme dataProtectionScheme = new DataProtectionScheme(1, PasswordEncodingAlgorithm.SHA256_BCRYPT, encryptedData, cryptoHelper);
