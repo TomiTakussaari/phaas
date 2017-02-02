@@ -15,7 +15,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,11 +61,13 @@ class UsersFromEnvironment {
         }
 
         static List<UserData> deSerialize(String input) {
-            return objectMapSafely(() -> objectMapper.readValue(input, collectionType));
+            String data = new String(Base64.getDecoder().decode(input), StandardCharsets.UTF_8);
+            return objectMapSafely(() -> objectMapper.readValue(data, collectionType));
         }
 
         static String serialize(List<UserData> input) {
-            return objectMapSafely(() -> objectMapper.writeValueAsString(input));
+            String data = objectMapSafely(() -> objectMapper.writeValueAsString(input));
+            return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
         }
 
     }

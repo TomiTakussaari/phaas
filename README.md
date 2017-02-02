@@ -109,8 +109,8 @@ Phaas can also use external database for it's user, but there is no documentatio
 ```properties
 
 # example of environment variables configuration that will initialize phaas user database with user "testing-user", make user database immutable and use pepper "secret-pepper" when protecting data
-
-db.users.content = [{"userDTO":{"id":null,"userName":"testing-user","roles":"ROLE_USER","sharedSecretForSigningCommunication":"secret"},"userConfigurationDTOs":[{"id":null,"user":"testing-user","dataProtectionKey":"$2.0f021e62f1f18e08.66e971f100652ac17b560750f527af7057cbacff5449100dcd50627af03b6de092c6978c3d68d2b155cafd5e883b98d622b532a86344b1cc290f781e37a80074","active":true,"algorithm":"ARGON2"}]}]
+#db.users.content is base64 encoded json String
+db.users.content = W3sidXNlckRUTyI6eyJpZCI6bnVsbCwidXNlck5hbWUiOiJ0ZXN0aW5nLXVzZXIiLCJyb2xlcyI6IlJPTEVfVVNFUiIsInNoYXJlZFNlY3JldEZvclNpZ25pbmdDb21tdW5pY2F0aW9uIjoic2VjcmV0In0sInVzZXJDb25maWd1cmF0aW9uRFRPcyI6W3siaWQiOm51bGwsInVzZXIiOiJ0ZXN0aW5nLXVzZXIiLCJkYXRhUHJvdGVjdGlvbktleSI6IiQyLjAwZmE5ZjgzOGIyNTk5ZjYuY2M2NzUxMzQzNDlmNjNmZDVhOTg5YzY2YjdmYWQyYjE0MjIwYzI5YTgwMDdmMzU5YWM3ODllYWJmNDE5NWU5MzEzMTYxZTBlMDg2OTI0OGYxNmM5OTJhYzE4OTYwMmZiOTE4ZTM1NGQxZDRjMjM2NjZkY2RlOGRiYmFiM2Q3ZDgiLCJhY3RpdmUiOnRydWUsImFsZ29yaXRobSI6IkFSR09OMiJ9XX1d
 immutable.users.db = true
 phaas.pepper.source = string://secret-pepper # could also be file://secret.txt or https://my-http-server/secret|my-custom-header=header-value&my-other-custom-header=value2
 

@@ -25,7 +25,7 @@ public class UsersFromEnvironmentTest {
     private final Environment environment = Mockito.mock(Environment.class);
     private final UsersService usersService = Mockito.mock(UsersService.class);
 
-    private final String serializedFrom = "[{\"userDTO\":{\"id\":3,\"userName\":\"username\",\"roles\":\"ROLE_ADMIN, ROLE_USER\",\"sharedSecretForSigningCommunication\":\"my-shared-secret\"},\"userConfigurationDTOs\":[{\"id\":1,\"user\":\"username\",\"dataProtectionKey\":\"old-data-protection-key\",\"active\":false,\"algorithm\":\"SHA256_BCRYPT\"},{\"id\":2,\"user\":\"username\",\"dataProtectionKey\":\"new-data-protection-key\",\"active\":true,\"algorithm\":\"SHA256_BCRYPT\"}]}]";
+    private final String serializedFrom = "W3sidXNlckRUTyI6eyJpZCI6MywidXNlck5hbWUiOiJ1c2VybmFtZSIsInJvbGVzIjoiUk9MRV9BRE1JTiwgUk9MRV9VU0VSIiwic2hhcmVkU2VjcmV0Rm9yU2lnbmluZ0NvbW11bmljYXRpb24iOiJteS1zaGFyZWQtc2VjcmV0In0sInVzZXJDb25maWd1cmF0aW9uRFRPcyI6W3siaWQiOjEsInVzZXIiOiJ1c2VybmFtZSIsImRhdGFQcm90ZWN0aW9uS2V5Ijoib2xkLWRhdGEtcHJvdGVjdGlvbi1rZXkiLCJhY3RpdmUiOmZhbHNlLCJhbGdvcml0aG0iOiJTSEEyNTZfQkNSWVBUIn0seyJpZCI6MiwidXNlciI6InVzZXJuYW1lIiwiZGF0YVByb3RlY3Rpb25LZXkiOiJuZXctZGF0YS1wcm90ZWN0aW9uLWtleSIsImFjdGl2ZSI6dHJ1ZSwiYWxnb3JpdGhtIjoiU0hBMjU2X0JDUllQVCJ9XX1d";
     private final UserDTO userDTO = new UserDTO(3, "username", "ROLE_ADMIN, ROLE_USER", "my-shared-secret");
     private final UserConfigurationDTO configurationDTO1 = new UserConfigurationDTO(1, userDTO.getUserName(), "old-data-protection-key", false, PasswordEncodingAlgorithm.SHA256_BCRYPT);
     private final UserConfigurationDTO configurationDTO2 = new UserConfigurationDTO(2, userDTO.getUserName(), "new-data-protection-key", true, PasswordEncodingAlgorithm.SHA256_BCRYPT);
