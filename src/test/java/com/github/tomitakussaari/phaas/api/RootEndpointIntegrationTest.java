@@ -32,7 +32,7 @@ public class RootEndpointIntegrationTest extends IT {
 
     @Test
     public void queryParametersHaveNoEffect() {
-        Response response = authenticatedWebTarget().path("/").request().get();
+        Response response = authenticatedWebTarget().path("/").queryParam("foo", "bar").request().get();
         assertThat(response.getStatus()).isEqualTo(200);
         response.close();
     }
