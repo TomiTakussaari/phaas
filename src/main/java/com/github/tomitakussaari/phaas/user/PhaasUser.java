@@ -6,6 +6,7 @@ import com.github.tomitakussaari.phaas.model.ProtectionSchemeNotFoundException;
 import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import com.github.tomitakussaari.phaas.util.CryptoHelper;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 
@@ -23,6 +25,13 @@ public class PhaasUser implements UserDetails {
     private final UserDTO userDTO;
     private final List<UserConfigurationDTO> configurations;
     private final CryptoHelper cryptoHelper;
+    @Getter(lazy = true)
+    private final CharSequence userPassword = findCurrentUserPassword();
+
+
+    public void prepareForAsyncUsage() {
+        Objects.requireNonNull(getUserPassword(), "user password was not resolved");
+    }
 
     public DataProtectionScheme activeProtectionScheme() {
         return configurations.stream().filter(UserConfigurationDTO::isActive).findFirst()
@@ -40,7 +49,7 @@ public class PhaasUser implements UserDetails {
         return configurations.stream().map(config -> config.toProtectionScheme(cryptoHelper)).collect(toList());
     }
 
-    public CharSequence findCurrentUserPassword() {
+    private CharSequence findCurrentUserPassword() {
         return (CharSequence) SecurityContextHolder.getContext().getAuthentication().getCredentials();
     }
 
@@ -49,11 +58,11 @@ public class PhaasUser implements UserDetails {
     }
 
     public CryptoData currentlyActiveCryptoData() {
-        return activeProtectionScheme().cryptoData(findCurrentUserPassword());
+        return activeProtectionScheme().cryptoData(getUserPassword());
     }
 
     public CryptoData cryptoDataForId(int schemeId) {
-        return protectionScheme(schemeId).cryptoData(findCurrentUserPassword());
+        return protectionScheme(schemeId).cryptoData(getUserPassword());
     }
 
     @Override

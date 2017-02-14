@@ -40,7 +40,7 @@ public class UsersApi {
     @RequestMapping(method = RequestMethod.PUT, produces = "application/json", path = "/me")
     public void changePasswords(@RequestBody ChangePasswordsRequest changePasswordsRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         rejectIfUserDatabaseIsImmutable();
-        usersService.renewEncryptionKeyProtection(userDetails.getUsername(), changePasswordsRequest.getNewPassword(), userDetails.findCurrentUserPassword(), changePasswordsRequest.getSharedSecretForSigningCommunication());
+        usersService.renewEncryptionKeyProtection(userDetails.getUsername(), changePasswordsRequest.getNewPassword(), userDetails.getUserPassword(), changePasswordsRequest.getSharedSecretForSigningCommunication());
     }
 
     @ApiOperation(value = "Creates new user, only usable by admins")
@@ -70,7 +70,7 @@ public class UsersApi {
     @RequestMapping(method = RequestMethod.POST, path = "/me/scheme", consumes = "application/json")
     public void newProtectionScheme(@RequestBody ProtectionSchemeRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
         rejectIfUserDatabaseIsImmutable();
-        usersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm(), userDetails.findCurrentUserPassword(), request.isRemoveOldSchemes());
+        usersService.newProtectionScheme(userDetails.getUsername(), request.getAlgorithm(), userDetails.getUserPassword(), request.isRemoveOldSchemes());
     }
 
     private PublicUser toPublicUser(PhaasUser userDetails) {

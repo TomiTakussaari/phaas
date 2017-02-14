@@ -12,9 +12,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.Collections;
+
+import static com.github.tomitakussaari.phaas.util.AsyncHelper.withName;
 
 @RestController
 @RequestMapping("/tokens")
@@ -24,15 +27,21 @@ public class TokensApi {
 
     @ApiOperation(value = "Creates token with given claims and validity", consumes = "application/json")
     @RequestMapping(method = RequestMethod.POST, path = "/create")
-    public CreateTokenResponse createJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
-        return new CreateTokenResponse(createdToken.getId(), createdToken.getToken());
+    public DeferredResult<CreateTokenResponse> createJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+        userDetails.prepareForAsyncUsage();
+        return withName("tokens").toDeferredResult(() -> {
+            JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
+            return new CreateTokenResponse(createdToken.getId(), createdToken.getToken());
+        });
     }
 
     @ApiOperation(value = "Parses and validates token and returns it's claims", consumes = "application/json")
     @RequestMapping(method = RequestMethod.PUT, path = "/parse")
-    public ParseTokenResponse parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        JwtHelper.ParsedToken parsedToken = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
-        return new ParseTokenResponse(parsedToken.getClaims(), parsedToken.getIssuedAt(), parsedToken.getId());
+    public DeferredResult<ParseTokenResponse> parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+        userDetails.prepareForAsyncUsage();
+        return withName("tokens").toDeferredResult(() -> {
+            JwtHelper.ParsedToken parsedToken = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
+            return new ParseTokenResponse(parsedToken.getClaims(), parsedToken.getIssuedAt(), parsedToken.getId());
+        });
     }
 }

@@ -46,7 +46,7 @@ public class PepperSource {
     private static String loadPepperFrom(@NonNull String url) {
         for (Source source : Source.values()) {
             if (url.toLowerCase().startsWith(source.name().toLowerCase())) {
-                return source.getPepperLoader().apply(url);
+                return AsyncHelper.withName("pepper").doWithTimeout(() -> source.getPepperLoader().apply(url));
             }
         }
         throw new IllegalArgumentException("No protocolhandler for " + url);

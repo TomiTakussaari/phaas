@@ -20,7 +20,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 import springfox.documentation.annotations.ApiIgnore;
+
+import static com.github.tomitakussaari.phaas.util.AsyncHelper.withName;
 
 @RestController
 @RequestMapping("/passwords")
@@ -33,8 +36,9 @@ public class PasswordApi {
     @ApiOperation(value = "Hashes and protects password")
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
-    public HashedPassword hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        return passwordHasher.hash(request, userDetails.currentlyActiveCryptoData());
+    public DeferredResult<HashedPassword> hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+        userDetails.prepareForAsyncUsage();
+        return withName("passwords").toDeferredResult(() -> passwordHasher.hash(request, userDetails.currentlyActiveCryptoData()));
     }
 
     @ApiOperation(value = "Verifies given password against given hash")
@@ -44,10 +48,11 @@ public class PasswordApi {
             @ApiResponse(code = 422, message = "Password was not valid")
     })
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
-    public ResponseEntity<PasswordVerifyResult> verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        PasswordVerifyResult result = passwordVerifier.verify(request, userDetails.cryptoDataForId(request.schemeId()), userDetails.currentlyActiveCryptoData());
-        return result.isValid() ? ResponseEntity.ok(result) : ResponseEntity.unprocessableEntity().body(result);
+    public DeferredResult<ResponseEntity<PasswordVerifyResult>> verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
+        userDetails.prepareForAsyncUsage();
+        return withName("passwords").toDeferredResult(() -> {
+            PasswordVerifyResult result = passwordVerifier.verify(request, userDetails.cryptoDataForId(request.schemeId()), userDetails.currentlyActiveCryptoData());
+            return result.isValid() ? ResponseEntity.ok(result) : ResponseEntity.unprocessableEntity().body(result);
+        });
     }
-
-
 }
