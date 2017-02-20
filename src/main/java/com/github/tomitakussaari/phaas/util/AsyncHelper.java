@@ -28,7 +28,7 @@ public class AsyncHelper {
     public <T> DeferredResult<T> toDeferredResult(Supplier<T> operation) {
         DeferredResult<T>  deferred = new DeferredResult<>((long) timeout);
         NamedCommand<T> command = new NamedCommand<>(name, operation);
-        command.observe().subscribe(deferred::setResult, error -> deferred.setErrorResult(handleHystrixError(error)));
+        command.observe().subscribe(deferred::setResult, error -> deferred.setErrorResult(getCause(error)));
         return deferred;
     }
 
@@ -36,12 +36,12 @@ public class AsyncHelper {
         try {
             return new NamedCommand<>(name, operation).execute();
         } catch (RuntimeException e) {
-            throw (RuntimeException) handleHystrixError(e);
+            throw (RuntimeException) getCause(e);
         }
     }
 
-    private Throwable handleHystrixError(Throwable error) {
-        if(error instanceof RuntimeException) {
+    static Throwable getCause(Throwable error) {
+        if(error.getCause() != null) {
             return error.getCause();
         }
         return error;

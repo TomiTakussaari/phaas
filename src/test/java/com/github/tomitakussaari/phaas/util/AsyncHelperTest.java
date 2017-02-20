@@ -21,6 +21,16 @@ public class AsyncHelperTest {
         Hystrix.reset();
     }
 
+
+    @Test
+    public void getCauseGetsReturnsCauseIfPresent() {
+        RuntimeException withoutCause = new RuntimeException();
+        RuntimeException withCause = new RuntimeException(withoutCause);
+
+        assertThat(AsyncHelper.getCause(withoutCause)).isSameAs(withoutCause);
+        assertThat(AsyncHelper.getCause(withCause)).isSameAs(withoutCause);
+    }
+
     @Test
     public void usesDifferentThreadToExecuteAsync() {
         String threadName = AsyncHelper.withName("testing").doWithTimeout(() -> Thread.currentThread().getName());
