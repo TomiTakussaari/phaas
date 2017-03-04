@@ -37,7 +37,6 @@ public class PasswordApi {
     @Secured({UsersService.USER_ROLE_VALUE})
     @RequestMapping(method = RequestMethod.PUT, path = "/hash", produces = "application/json")
     public DeferredResult<HashedPassword> hashPassword(@RequestBody PasswordHashRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        userDetails.prepareForAsyncUsage();
         return withName("passwords").toDeferredResult(() -> passwordHasher.hash(request, userDetails.currentlyActiveCryptoData()));
     }
 
@@ -49,7 +48,6 @@ public class PasswordApi {
     })
     @RequestMapping(method = RequestMethod.PUT, path = "/verify", produces = "application/json")
     public DeferredResult<ResponseEntity<PasswordVerifyResult>> verifyPassword(@RequestBody PasswordVerifyRequest request, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        userDetails.prepareForAsyncUsage();
         return withName("passwords").toDeferredResult(() -> {
             PasswordVerifyResult result = passwordVerifier.verify(request, userDetails.cryptoDataForId(request.schemeId()), userDetails.currentlyActiveCryptoData());
             return result.isValid() ? ResponseEntity.ok(result) : ResponseEntity.unprocessableEntity().body(result);

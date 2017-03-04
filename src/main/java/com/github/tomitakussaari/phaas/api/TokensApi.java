@@ -28,7 +28,6 @@ public class TokensApi {
     @ApiOperation(value = "Creates token with given claims and validity", consumes = "application/json")
     @RequestMapping(method = RequestMethod.POST, path = "/create")
     public DeferredResult<CreateTokenResponse> createJWT(@RequestBody CreateTokenRequest createRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        userDetails.prepareForAsyncUsage();
         return withName("tokens").toDeferredResult(() -> {
             JwtHelper.CreatedToken createdToken = jwtHelper.generate(userDetails, createRequest.getClaims(), createRequest.getValidityTime());
             return new CreateTokenResponse(createdToken.getId(), createdToken.getToken());
@@ -38,7 +37,6 @@ public class TokensApi {
     @ApiOperation(value = "Parses and validates token and returns it's claims", consumes = "application/json")
     @RequestMapping(method = RequestMethod.PUT, path = "/parse")
     public DeferredResult<ParseTokenResponse> parseJwt(@RequestBody ParseTokenRequest parseRequest, @ApiIgnore @AuthenticationPrincipal PhaasUser userDetails) {
-        userDetails.prepareForAsyncUsage();
         return withName("tokens").toDeferredResult(() -> {
             JwtHelper.ParsedToken parsedToken = jwtHelper.verifyAndGetClaims(userDetails, parseRequest.getToken(), parseRequest.getRequiredClaims().orElseGet(Collections::emptyMap), parseRequest.getMaxAcceptedAge());
             return new ParseTokenResponse(parsedToken.getClaims(), parsedToken.getIssuedAt(), parsedToken.getId());

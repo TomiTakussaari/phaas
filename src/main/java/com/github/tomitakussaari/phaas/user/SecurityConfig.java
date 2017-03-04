@@ -110,6 +110,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             PhaasUser phaasUser = (PhaasUser) userDetails;
             try {
                 Preconditions.checkState(phaasUser.activeProtectionScheme().cryptoData(passwordCandidate).getDataProtectionKey() != null);
+                phaasUser.setUserPassword(passwordCandidate);
             } catch (IllegalStateException keyDecryptFailed) {
                 throw new BadCredentialsException("invalid credentials", keyDecryptFailed);
             }

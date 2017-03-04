@@ -7,7 +7,9 @@ import com.github.tomitakussaari.phaas.user.dao.UserConfigurationDTO;
 import com.github.tomitakussaari.phaas.user.dao.UserDTO;
 import com.github.tomitakussaari.phaas.util.CryptoHelper;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,13 +27,8 @@ public class PhaasUser implements UserDetails {
     private final UserDTO userDTO;
     private final List<UserConfigurationDTO> configurations;
     private final CryptoHelper cryptoHelper;
-    @Getter(lazy = true)
-    private final CharSequence userPassword = findCurrentUserPassword();
-
-
-    public void prepareForAsyncUsage() {
-        Objects.requireNonNull(getUserPassword(), "user password was not resolved");
-    }
+    @Getter @Setter
+    private CharSequence userPassword;
 
     public DataProtectionScheme activeProtectionScheme() {
         return configurations.stream().filter(UserConfigurationDTO::isActive).findFirst()
@@ -47,10 +44,6 @@ public class PhaasUser implements UserDetails {
 
     public List<DataProtectionScheme> protectionSchemes() {
         return configurations.stream().map(config -> config.toProtectionScheme(cryptoHelper)).collect(toList());
-    }
-
-    private CharSequence findCurrentUserPassword() {
-        return (CharSequence) SecurityContextHolder.getContext().getAuthentication().getCredentials();
     }
 
     public String communicationSigningKey() {
